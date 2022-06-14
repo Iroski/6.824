@@ -85,11 +85,12 @@ type Raft struct {
 	lastVoteForTerm int
 	log             []LogEntry
 
-	commitIndex int
-	lastApplied int
+	commitIndex     int //已提交的最高的index
+	lastApplied     int //收到的最高的index
+	lastAppliedTerm int
 
-	nextIndex  []int
-	matchIndex int
+	nextIndex  []int //下一个server收到log的index
+	matchIndex []int //server中已经匹配的log
 
 	status           ServiceState
 	lastReceivedTime int64
@@ -194,7 +195,7 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 
 	resp.Term = rf.currentTerm
 	candidateTerm := req.Term
-	if (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && candidateTerm > rf.currentTerm && req.LastLogIndex >= rf.commitIndex {
+	if (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && candidateTerm > rf.currentTerm && req.LastLogIndex >= rf.commitIndex && req.LastLogTerm >= rf.lastAppliedTerm {
 		rf.voteFor = req.CandidateId
 		rf.lastVoteForTerm = candidateTerm
 		rf.lastReceivedTime = time.Now().UnixMilli()
@@ -234,7 +235,7 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 // that the caller passes the address of the reply struct with &, not
 // the struct itself.
 //
-func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
+func (rf *Raft) SendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
 	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
 	return ok
 }
@@ -286,12 +287,12 @@ func (rf *Raft) killed() bool {
 
 // The ticker go routine starts a new election if this peer hasn't received
 // heartsbeats recently.
-func (rf *Raft) ticker() {
+func (rf *Raft) Ticker() {
 	for rf.killed() == false {
 		periodicalTime := time.Now().UnixMilli()
 		time.Sleep(time.Duration(400+rand.Intn(150)) * time.Millisecond)
 		if periodicalTime > rf.lastReceivedTime && rf.status == Follower {
-			rf.election(periodicalTime)
+			rf.Election(periodicalTime)
 		}
 	}
 }
@@ -324,19 +325,19 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.readPersist(persister.ReadRaftState())
 
 	// start ticker goroutine to start elections
-	go rf.ticker()
-	go rf.leaderTicker()
+	go rf.Ticker()
+	go rf.LeaderTicker()
 	return rf
 }
-func (rf *Raft) election(periodicalTime int64) {
+func (rf *Raft) Election(periodicalTime int64) {
 	rf.mu.Lock()
-	defer rf.mu.Unlock()
 	if !(periodicalTime > rf.lastReceivedTime && rf.status == Follower) {
 		return
 	}
-
 	rf.currentTerm += 1
 	rf.status = Candidate
+	rf.lastVoteForTerm = rf.currentTerm
+	rf.voteFor = rf.me
 	respChan := make(chan *RequestVoteReply, len(rf.peers))
 	req := &RequestVoteArgs{
 		Term:         rf.currentTerm,
@@ -344,6 +345,7 @@ func (rf *Raft) election(periodicalTime int64) {
 		LastLogIndex: rf.commitIndex,
 		LastLogTerm:  0,
 	}
+	rf.mu.Unlock()
 	rf.logger.Printf("time out, lastReceivedTime:%d,req:%+v", rf.lastReceivedTime, req)
 	voteCount := 1
 	for i := range rf.peers {
@@ -354,12 +356,12 @@ func (rf *Raft) election(periodicalTime int64) {
 		rf.logger.Printf("send vote to %d", i)
 		tempI := i
 		go func() {
-			rf.sendRequestVote(tempI, req, resp)
+			rf.SendRequestVote(tempI, req, resp)
 			respChan <- resp
 		}()
 	}
 	curTime := time.Now().UnixMilli()
-	for voteCount <= len(rf.peers)/2 && curTime+50 >= time.Now().UnixMilli() {
+	for voteCount <= len(rf.peers)/2 && curTime+50 >= time.Now().UnixMilli() && rf.status == Candidate {
 		select {
 		case resp := <-respChan:
 			rf.logger.Printf("received vote,%+v", resp)
@@ -370,7 +372,9 @@ func (rf *Raft) election(periodicalTime int64) {
 		default:
 		}
 	}
-	if voteCount > len(rf.peers)/2 {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if voteCount > len(rf.peers)/2 && rf.status == Candidate {
 		rf.logger.Println("become a leader")
 		rf.status = Leader
 		go rf.SendHeartBeat()
@@ -382,10 +386,10 @@ func (rf *Raft) election(periodicalTime int64) {
 type AppendEntriesReq struct {
 	Term         int
 	LeaderId     int
-	PrevLogIndex int
-	PrevLogTerm  int
+	PrevLogIndex int //想传播的log的上一个index
+	PrevLogTerm  int //prevLogIndex的term
 	Entries      []LogEntry
-	LeaderCommit int
+	LeaderCommit int //leader’s commitIndex
 }
 type AppendEntriesResp struct {
 	Term      int
@@ -393,6 +397,8 @@ type AppendEntriesResp struct {
 	Responder int
 }
 
+//If an existing entry conflicts with a new one (same index but different terms), delete the existing entry and all that follow it
+//If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry)
 func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -415,7 +421,7 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	return
 }
 
-func (rf *Raft) leaderTicker() {
+func (rf *Raft) LeaderTicker() {
 	for !rf.killed() {
 		time.Sleep(200 * time.Millisecond)
 		if rf.status == Leader {
