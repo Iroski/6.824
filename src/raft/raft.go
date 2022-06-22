@@ -85,9 +85,10 @@ type Raft struct {
 	lastVoteForTerm int
 	log             []LogEntry
 
-	commitIndex     int //已提交的最高的index
-	lastApplied     int //收到的最高的index
-	lastAppliedTerm int
+	commitIndex      int //已提交的最高的index
+	commitTerm       int
+	lastAppliedIndex int //收到的最高的index
+	lastAppliedTerm  int
 
 	nextIndex  []int //下一个server收到log的index
 	matchIndex []int //server中已经匹配的log
@@ -235,7 +236,7 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 // that the caller passes the address of the reply struct with &, not
 // the struct itself.
 //
-func (rf *Raft) SendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
+func (rf *Raft) RPCSendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
 	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
 	return ok
 }
@@ -255,11 +256,39 @@ func (rf *Raft) SendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 // the leader.
 //
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
-	index := -1
-	term := -1
-	isLeader := true
+	rf.mu.Lock()
+	isLeader := rf.status == Leader
+	rf.mu.Unlock()
 
-	// Your code here (2B).
+	if isLeader == false {
+		return -1, -1, false
+	}
+
+	rf.mu.Lock()
+	rf.lastAppliedIndex++
+	rf.lastAppliedTerm = rf.currentTerm
+	index := rf.lastAppliedIndex
+	term := rf.currentTerm
+	rf.mu.Unlock()
+	entry := LogEntry{
+		Command: command,
+		Term:    term,
+	}
+	rf.mu.Lock()
+	rf.logger.Printf("begin to send command:%+v", entry)
+	rf.log = append(rf.log, entry)
+	rf.logger.Printf("logs:%+v", rf.log)
+	entries := rf.log[rf.commitIndex+1:] //commitIndex为1时，实际commit的是log[0]，所以取值不+1
+	rf.mu.Unlock()
+	go func() {
+		if result := rf.SendAppendEntries(entries, Append); result {
+			rf.mu.Lock()
+			rf.CommitLog(rf.commitIndex, rf.lastAppliedIndex)
+			rf.commitIndex = rf.lastAppliedIndex
+			rf.mu.Unlock()
+			rf.SendAppendEntries(nil, Commit)
+		}
+	}()
 
 	return index, term, isLeader
 }
@@ -321,6 +350,10 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// Your initialization code here (2A, 2B, 2C).
 	rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
+	rf.logger.Printf("i was born")
+	//rf.commitIndex = -1
+	//rf.lastAppliedIndex = -1
+	rf.log = append(rf.log, LogEntry{})
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
@@ -329,6 +362,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	go rf.LeaderTicker()
 	return rf
 }
+
 func (rf *Raft) Election(periodicalTime int64) {
 	rf.mu.Lock()
 	if !(periodicalTime > rf.lastReceivedTime && rf.status == Follower) {
@@ -356,7 +390,7 @@ func (rf *Raft) Election(periodicalTime int64) {
 		rf.logger.Printf("send vote to %d", i)
 		tempI := i
 		go func() {
-			rf.SendRequestVote(tempI, req, resp)
+			rf.RPCSendRequestVote(tempI, req, resp)
 			respChan <- resp
 		}()
 	}
@@ -377,11 +411,19 @@ func (rf *Raft) Election(periodicalTime int64) {
 	if voteCount > len(rf.peers)/2 && rf.status == Candidate {
 		rf.logger.Println("become a leader")
 		rf.status = Leader
-		go rf.SendHeartBeat()
+		go rf.SendAppendEntries(nil, HeartBeat)
 	} else {
 		rf.status = Follower
 	}
 }
+
+type AppendEntriesStatus int
+
+const (
+	HeartBeat = 0
+	Append    = 1
+	Commit    = 2
+)
 
 type AppendEntriesReq struct {
 	Term         int
@@ -390,11 +432,14 @@ type AppendEntriesReq struct {
 	PrevLogTerm  int //prevLogIndex的term
 	Entries      []LogEntry
 	LeaderCommit int //leader’s commitIndex
+	Status       AppendEntriesStatus
 }
 type AppendEntriesResp struct {
-	Term      int
-	Success   bool
-	Responder int
+	Term          int
+	Success       bool
+	Responder     int
+	RequiredTerm  int
+	RequiredIndex int
 }
 
 //If an existing entry conflicts with a new one (same index but different terms), delete the existing entry and all that follow it
@@ -410,7 +455,9 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 		return
 	}
 	rf.lastReceivedTime = time.Now().UnixMilli()
-	rf.logger.Printf("append entries time:%d", rf.lastReceivedTime)
+	//rf.logger.Printf("append entries time:%d", rf.lastReceivedTime)
+
+	//leader校验
 	if req.Term > rf.currentTerm {
 		rf.logger.Printf("become a follower with leader:%d", req.LeaderId)
 		rf.currentTerm = req.Term
@@ -418,29 +465,65 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 		rf.status = Follower
 	}
 	resp.Term, resp.Success = rf.currentTerm, true
+
+	//不同类型消息变更
+	switch req.Status {
+	case Append:
+		if req.PrevLogTerm < rf.lastAppliedTerm || req.PrevLogIndex < rf.lastAppliedIndex || req.LeaderCommit < rf.commitIndex {
+			resp.Success = false
+			rf.logger.Printf("receive command, but false,req:%+v,self applied term:%d,self applied index:%d,self applied commit index:%d", req, rf.lastAppliedTerm, rf.lastAppliedIndex, rf.commitIndex)
+		} else {
+			rf.log = append(rf.log, req.Entries...)
+			rf.lastAppliedIndex++
+			rf.lastAppliedTerm = rf.currentTerm
+			rf.logger.Printf("success append entry for req:%+v，current logs:%+v", req, rf.log)
+		}
+	case Commit:
+		rf.logger.Printf("self commit index:%d,leader commit:%d", rf.commitIndex, req.LeaderCommit)
+		rf.CommitLog(rf.commitIndex, req.LeaderCommit)
+	default:
+
+	}
+
 	return
 }
-
+func (rf *Raft) CommitLog(from, to int) {
+	rf.logger.Printf("commit msg for start:%d,end:%d", from+1, to)
+	for i := from + 1; i <= to; i++ {
+		rf.commitIndex++
+		msg := ApplyMsg{
+			CommandValid: true,
+			Command:      rf.log[i].Command,
+			CommandIndex: rf.commitIndex,
+		}
+		rf.applyChan <- msg
+		rf.logger.Printf("commit msg for command:%+v,i:%d,to:%d", msg, i, to)
+	}
+}
 func (rf *Raft) LeaderTicker() {
 	for !rf.killed() {
 		time.Sleep(200 * time.Millisecond)
 		if rf.status == Leader {
-			rf.SendHeartBeat()
+			rf.SendAppendEntries(nil, HeartBeat)
 		}
 	}
 }
 
-func (rf *Raft) SendHeartBeat() {
+func (rf *Raft) SendAppendEntries(entries []LogEntry, status AppendEntriesStatus) bool {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+	if rf.status != Leader {
+		return false
+	}
 	respChan := make(chan *AppendEntriesResp, len(rf.peers))
 	req := &AppendEntriesReq{
 		Term:         rf.currentTerm,
 		LeaderId:     rf.me,
-		PrevLogIndex: rf.lastApplied,
-		PrevLogTerm:  0, //todo
-		Entries:      nil,
-		LeaderCommit: 0,
+		PrevLogIndex: rf.lastAppliedIndex,
+		PrevLogTerm:  rf.lastAppliedTerm,
+		Entries:      entries,
+		LeaderCommit: rf.commitIndex,
+		Status:       status,
 	}
 	for i := range rf.peers {
 		if i != rf.me {
@@ -448,15 +531,19 @@ func (rf *Raft) SendHeartBeat() {
 			rf.logger.Printf("send heartbeat to %d,info:%+v", i, req)
 			a := i
 			go func(b int) {
-				rf.SendAppendEntries(b, req, resp)
+				rf.RPCSendAppendEntries(b, req, resp)
 				respChan <- resp
 			}(a)
 		}
 	}
 	curTime := time.Now().UnixMilli()
-	for curTime+180 >= time.Now().UnixMilli() {
+	count := 0
+	for status != Commit && curTime+180 >= time.Now().UnixMilli() {
 		select {
 		case resp := <-respChan:
+			if resp.Success {
+				count++
+			}
 			if !resp.Success && resp.Term > rf.currentTerm {
 				rf.logger.Printf("become a follower with leader:%d", resp.Responder)
 				rf.status = Follower
@@ -466,9 +553,23 @@ func (rf *Raft) SendHeartBeat() {
 
 		}
 	}
+
+	switch status {
+	case Append:
+		if count > len(rf.peers)/2 && rf.status == Leader {
+			return true
+		} else {
+			return false
+		}
+	case Commit:
+		return true //todo
+	default:
+
+	}
+	return true
 }
 
-func (rf *Raft) SendAppendEntries(to int, req *AppendEntriesReq, resp *AppendEntriesResp) bool {
+func (rf *Raft) RPCSendAppendEntries(to int, req *AppendEntriesReq, resp *AppendEntriesResp) bool {
 	ok := rf.peers[to].Call("Raft.AppendEntries", req, resp)
 	return ok
 }
