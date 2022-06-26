@@ -1,6 +1,6 @@
 module 6.824
 
-go 1.18
+go 1.17
 
 require (
 	github.com/json-iterator/go v1.1.12 // indirect

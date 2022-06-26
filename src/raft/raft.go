@@ -19,9 +19,9 @@ package raft
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
-	"os"
 	"time"
 
 	//	"bytes"
@@ -103,7 +103,8 @@ type Raft struct {
 // return currentTerm and whether this server
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
-
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	return rf.currentTerm, rf.status == Leader
 }
 
@@ -199,7 +200,7 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 		rf.voteFor = req.CandidateId
 		rf.lastVoteForTerm = candidateTerm
 		rf.lastReceivedTime = time.Now().UnixMilli()
-
+		rf.currentTerm = candidateTerm
 		resp.Term = candidateTerm
 		resp.VoteGranted = true
 		rf.logger.Printf("vote for %d,time:%d", req.CandidateId, rf.lastReceivedTime)
@@ -291,7 +292,11 @@ func (rf *Raft) Ticker() {
 	for rf.killed() == false {
 		periodicalTime := time.Now().UnixMilli()
 		time.Sleep(time.Duration(400+rand.Intn(150)) * time.Millisecond)
-		if periodicalTime > rf.lastReceivedTime && rf.status == Follower {
+		rf.mu.Lock()
+		lastReceivedTime := rf.lastReceivedTime
+		status := rf.status
+		rf.mu.Unlock()
+		if periodicalTime > lastReceivedTime && status == Follower {
 			rf.Election(periodicalTime)
 		}
 	}
@@ -320,7 +325,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
-	rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
+	//rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
+	rf.logger = log.New(ioutil.Discard, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
@@ -411,7 +417,7 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	}
 	rf.lastReceivedTime = time.Now().UnixMilli()
 	rf.logger.Printf("append entries time:%d", rf.lastReceivedTime)
-	if req.Term > rf.currentTerm {
+	if req.Term >= rf.currentTerm {
 		rf.logger.Printf("become a follower with leader:%d", req.LeaderId)
 		rf.currentTerm = req.Term
 		rf.voteFor = NotVote
@@ -424,9 +430,11 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 func (rf *Raft) LeaderTicker() {
 	for !rf.killed() {
 		time.Sleep(200 * time.Millisecond)
+		rf.mu.Lock()
 		if rf.status == Leader {
-			rf.SendHeartBeat()
+			go rf.SendHeartBeat()
 		}
+		rf.mu.Unlock()
 	}
 }
 
