@@ -32,7 +32,6 @@ import (
 	"6.824/labrpc"
 )
 
-//
 // as each Raft peer becomes aware that successive log entries are
 // committed, the peer should send an ApplyMsg to the service (or
 // tester) on the same server, via the applyCh passed to Make(). set
@@ -42,7 +41,6 @@ import (
 // in part 2D you'll want to send other kinds of messages (e.g.,
 // snapshots) on the applyCh, but set CommandValid to false for these
 // other uses.
-//
 type ApplyMsg struct {
 	CommandValid bool
 	Command      interface{}
@@ -68,9 +66,14 @@ const (
 	NotVote   int          = -999
 )
 
-//
+type VoteType int
+
+const (
+	PreVote VoteType = iota
+	TrueVote
+)
+
 // A Go object implementing a single Raft peer.
-//
 type Raft struct {
 	mu        sync.Mutex          // Lock to protect shared access to this peer's state
 	peers     []*labrpc.ClientEnd // RPC end points of all peers
@@ -93,6 +96,7 @@ type Raft struct {
 	//这两个似乎可以简化成一个，目前nextidx似乎没有用
 	nextIndex  []int //下一个server收到log的index
 	matchIndex []int //server中已经匹配的log
+	online     []int //todo 如果后续Append会经常给失联的发，需要判别
 
 	status           ServiceState
 	lastReceivedTime int64
@@ -110,11 +114,9 @@ func (rf *Raft) GetState() (int, bool) {
 	return rf.currentTerm, rf.status == Leader
 }
 
-//
 // save Raft's persistent state to stable storage,
 // where it can later be retrieved after a crash and restart.
 // see paper's Figure 2 for a description of what should be persistent.
-//
 func (rf *Raft) persist() {
 	// Your code here (2C).
 	// Example:
@@ -126,9 +128,7 @@ func (rf *Raft) persist() {
 	// rf.persister.SaveRaftState(data)
 }
 
-//
 // restore previously persisted state.
-//
 func (rf *Raft) readPersist(data []byte) {
 	if data == nil || len(data) < 1 { // bootstrap without any state?
 		return
@@ -148,10 +148,8 @@ func (rf *Raft) readPersist(data []byte) {
 	// }
 }
 
-//
 // A service wants to switch to snapshot.  Only do so if Raft hasn't
 // have more recent info since it communicate the snapshot on applyCh.
-//
 func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool {
 
 	// Your code here (2D).
@@ -168,29 +166,26 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 
 }
 
-//
 // example RequestVote RPC arguments structure.
 // field names must start with capital letters!
-//
 type RequestVoteArgs struct {
-	Term         int
-	CandidateId  int
-	LastLogIndex int
-	LastLogTerm  int
+	Term            int
+	CandidateId     int
+	LastCommitIndex int
+	LastCommitTerm  int
 }
 
-//
 // example RequestVote RPC reply structure.
 // field names must start with capital letters!
-//
 type RequestVoteReply struct {
-	Term        int
-	VoteGranted bool
+	Term            int
+	VoteGranted     bool
+	SelfId          int
+	LastCommitIndex int
+	LastCommitTerm  int
 }
 
-//
 // example RequestVote RPC handler.
-//
 func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -198,18 +193,24 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 
 	resp.Term = rf.currentTerm
 	candidateTerm := req.Term
-	if (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && candidateTerm > rf.currentTerm && req.LastLogIndex >= rf.commitIndex && req.LastLogTerm >= rf.lastAppliedTerm {
+	if (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && candidateTerm > rf.currentTerm && req.LastCommitIndex >= rf.commitIndex && req.LastCommitTerm >= rf.lastAppliedTerm {
 		rf.voteFor = req.CandidateId
 		rf.lastVoteForTerm = candidateTerm
 		rf.lastReceivedTime = time.Now().UnixMilli()
+		rf.status = Follower
 
 		resp.Term = candidateTerm
+		resp.LastCommitIndex = rf.lastAppliedIndex
+		resp.LastCommitTerm = rf.lastAppliedTerm
 		resp.VoteGranted = true
+		resp.SelfId = rf.me
 		rf.logger.Printf("vote for %d,time:%d", req.CandidateId, rf.lastReceivedTime)
+	}
+	if req.Term > rf.currentTerm {
+		rf.currentTerm = req.Term
 	}
 }
 
-//
 // example code to send a RequestVote RPC to a server.
 // server is the index of the target server in rf.peers[].
 // expects RPC arguments in args.
@@ -237,13 +238,11 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 // capitalized all field names in structs passed over RPC, and
 // that the caller passes the address of the reply struct with &, not
 // the struct itself.
-//
 func (rf *Raft) RPCSendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
 	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
 	return ok
 }
 
-//
 // the service using Raft (e.g. a k/v server) wants to start
 // agreement on the next command to be appended to Raft's log. if this
 // server isn't the leader, returns false. otherwise start the
@@ -256,13 +255,12 @@ func (rf *Raft) RPCSendRequestVote(server int, args *RequestVoteArgs, reply *Req
 // if it's ever committed. the second return value is the current
 // term. the third return value is true if this server believes it is
 // the leader.
-//
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.mu.Lock()
 	isLeader := rf.status == Leader
 	rf.mu.Unlock()
 
-	if isLeader == false {
+	if !isLeader {
 		return -1, -1, false
 	}
 
@@ -294,7 +292,6 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	return index, term, isLeader
 }
 
-//
 // the tester doesn't halt goroutines created by Raft after each test,
 // but it does call the Kill() method. your code can use killed() to
 // check whether Kill() has been called. the use of atomic avoids the
@@ -304,7 +301,6 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 // up CPU time, perhaps causing later tests to fail and generating
 // confusing debug output. any goroutine with a long-running loop
 // should call killed() to check whether it should stop.
-//
 func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
 	// Your code here, if desired.
@@ -318,7 +314,7 @@ func (rf *Raft) killed() bool {
 // The ticker go routine starts a new election if this peer hasn't received
 // heartsbeats recently.
 func (rf *Raft) Ticker() {
-	for rf.killed() == false {
+	for !rf.killed() {
 		periodicalTime := time.Now().UnixMilli()
 		time.Sleep(time.Duration(400+rand.Intn(150)) * time.Millisecond)
 		rf.mu.Lock()
@@ -331,7 +327,6 @@ func (rf *Raft) Ticker() {
 	}
 }
 
-//
 // the service or tester wants to create a Raft server. the ports
 // of all the Raft servers (including this one) are in peers[]. this
 // server's port is peers[me]. all the servers' peers[] arrays
@@ -341,7 +336,6 @@ func (rf *Raft) Ticker() {
 // tester or service expects Raft to send ApplyMsg messages.
 // Make() must return quickly, so it should start goroutines
 // for any long-running work.
-//
 func Make(peers []*labrpc.ClientEnd, me int,
 	persister *Persister, applyCh chan ApplyMsg) *Raft {
 	rf := &Raft{
@@ -355,13 +349,15 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// Your initialization code here (2A, 2B, 2C).
 	rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
+	// rf.logger.SetOutput(ioutil.Discard)
 	rf.logger.Printf("i was born")
 	//rf.commitIndex = -1
 	//rf.lastAppliedIndex = -1
 	rf.log = append(rf.log, LogEntry{})
 	rf.matchIndex = make([]int, len(rf.peers))
 	rf.nextIndex = make([]int, len(rf.peers))
-	for i, _ := range rf.nextIndex {
+	rf.online = make([]int, len(rf.peers))
+	for i := range rf.nextIndex {
 		rf.nextIndex[i] = 1
 	}
 	// initialize from state persisted before a crash
@@ -384,10 +380,10 @@ func (rf *Raft) Election(periodicalTime int64) {
 	rf.voteFor = rf.me
 	respChan := make(chan *RequestVoteReply, len(rf.peers))
 	req := &RequestVoteArgs{
-		Term:         rf.currentTerm,
-		CandidateId:  rf.me,
-		LastLogIndex: rf.commitIndex,
-		LastLogTerm:  rf.commitTerm,
+		Term:            rf.currentTerm,
+		CandidateId:     rf.me,
+		LastCommitIndex: rf.commitIndex,
+		LastCommitTerm:  rf.commitTerm,
 	}
 	rf.mu.Unlock()
 	rf.logger.Printf("time out, lastReceivedTime:%d,req:%+v", rf.lastReceivedTime, req)
@@ -412,6 +408,8 @@ func (rf *Raft) Election(periodicalTime int64) {
 			if resp.VoteGranted {
 				voteCount++
 			}
+			rf.matchIndex[resp.SelfId] = resp.LastCommitIndex
+			rf.nextIndex[resp.SelfId] = rf.matchIndex[resp.SelfId] + 1
 			curTime = time.Now().UnixMilli()
 		default:
 		}
@@ -446,16 +444,18 @@ type AppendEntriesReq struct {
 	SelfId       int //接受方在我方的数组中所处的位置
 }
 type AppendEntriesResp struct {
-	Term          int
-	Success       bool
-	Responder     int
-	RequiredTerm  int
-	RequiredIndex int
-	SelfId        int //参照req
+	Term            int
+	Success         bool
+	Responder       int
+	RequiredTerm    int
+	RequiredIndex   int
+	SelfId          int //参照req
+	LastCommitIndex int
+	LastCommitTerm  int
 }
 
 // AppendEntries If an existing entry conflicts with a new one (same index but different terms), delete the existing entry and all that follow it
-//If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry) //todo
+// If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry) //todo
 func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -464,6 +464,8 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	rf.logger.Printf("receive append entries:%+v,current term:%d", req, rf.currentTerm)
 	if req.Term < rf.currentTerm {
 		resp.Term = rf.currentTerm
+		resp.LastCommitIndex = rf.commitIndex
+		resp.LastCommitTerm = rf.commitTerm
 		resp.Success = false
 		return
 	}
@@ -471,7 +473,7 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	//rf.logger.Printf("append entries time:%d", rf.lastReceivedTime)
 
 	//leader校验
-	if req.Term > rf.currentTerm {
+	if req.Term > rf.currentTerm && req.LeaderCommit >= rf.commitIndex {
 		rf.logger.Printf("become a follower with leader:%d", req.LeaderId)
 		rf.currentTerm = req.Term
 		rf.voteFor = NotVote
@@ -482,14 +484,15 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	//不同类型消息变更
 	switch req.Status {
 	case Append:
-		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex+1, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
+		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
 		if req.PrevLogIndex == rf.lastAppliedIndex && req.PrevLogTerm == rf.lastAppliedTerm && req.LeaderCommit == rf.commitIndex {
 			//if req.PrevLogIndex == rf.lastAppliedIndex+1 ... //todo 这里不知道为啥当初加一了，后续注意
 			rf.log = append(rf.log, req.Entries...)
 			rf.lastAppliedIndex++
 			rf.lastAppliedTerm = rf.currentTerm
-			rf.logger.Printf("success append entry for req:%+v", req)
+			rf.logger.Printf("success append entry for req:%+v, self entries:%+v", req, rf.log)
 		} else {
+			//自己的内容更新
 			if req.PrevLogTerm < rf.lastAppliedTerm || req.PrevLogIndex < rf.lastAppliedIndex || req.LeaderCommit < rf.commitIndex { //leader超时后重连，在未变成follower之前有可能会发消息
 				resp.Success = false
 				rf.logger.Printf("receive command, but false,req:%+v,self applied term:%d,self applied index:%d,self applied commit index:%d", req, rf.lastAppliedTerm, rf.lastAppliedIndex, rf.commitIndex)
@@ -505,11 +508,9 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	default:
 
 	}
-
-	return
 }
 
-//CommitLog 需要确保外围被锁
+// CommitLog 需要确保外围被锁
 func (rf *Raft) CommitLog(from, to int) {
 	rf.logger.Printf("commit msg for start:%d,end:%d", from+1, to)
 	for i := from + 1; i <= to; i++ {
@@ -584,9 +585,14 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 				successResp = append(successResp, resp)
 			}
 			if !resp.Success && resp.Term > rf.currentTerm {
-				rf.logger.Printf("become a follower with leader:%d", resp.Responder)
-				rf.status = Follower
 				rf.currentTerm = resp.Term
+				if resp.LastCommitIndex >= rf.commitIndex && resp.LastCommitTerm >= rf.commitTerm {
+					rf.logger.Printf("become a follower with leader:%d", resp.Responder)
+					rf.status = Follower
+				} else {
+					rf.logger.Printf("become a candidate by leader:%d", resp.Responder)
+					rf.status = Candidate
+				}
 			}
 		default:
 
