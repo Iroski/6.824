@@ -41,6 +41,8 @@ import (
 // in part 2D you'll want to send other kinds of messages (e.g.,
 // snapshots) on the applyCh, but set CommandValid to false for these
 // other uses.
+const HeartBeatDuration = 200
+
 type ApplyMsg struct {
 	CommandValid bool
 	Command      interface{}
@@ -173,6 +175,7 @@ type RequestVoteArgs struct {
 	CandidateId     int
 	LastCommitIndex int
 	LastCommitTerm  int
+	Type            VoteType
 }
 
 // example RequestVote RPC reply structure.
@@ -190,13 +193,24 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	rf.logger.Printf("receive requestVote:%+v, currentTerm:%d,commitIndex:%d", req, rf.currentTerm, rf.commitIndex)
-
 	resp.Term = rf.currentTerm
 	candidateTerm := req.Term
-	if (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && candidateTerm > rf.currentTerm && req.LastCommitIndex >= rf.commitIndex && req.LastCommitTerm >= rf.lastAppliedTerm {
+
+	if req.Type == PreVote {
+		resp.VoteGranted = false
+		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && (rf.currentTerm < req.Term || (rf.currentTerm == req.Term && rf.commitIndex < req.LastCommitIndex)) {
+			resp.VoteGranted = true
+			resp.SelfId = rf.me
+			resp.Term = rf.currentTerm
+			rf.voteFor = req.CandidateId
+			rf.lastVoteForTerm = candidateTerm
+		}
+		return
+	}
+
+	if rf.voteFor == req.CandidateId && candidateTerm > rf.currentTerm && req.LastCommitIndex >= rf.commitIndex && req.LastCommitTerm >= rf.lastAppliedTerm {
 		rf.voteFor = req.CandidateId
 		rf.lastVoteForTerm = candidateTerm
-		rf.lastReceivedTime = time.Now().UnixMilli()
 		rf.status = Follower
 
 		resp.Term = candidateTerm
@@ -316,11 +330,13 @@ func (rf *Raft) killed() bool {
 func (rf *Raft) Ticker() {
 	for !rf.killed() {
 		periodicalTime := time.Now().UnixMilli()
-		time.Sleep(time.Duration(400+rand.Intn(150)) * time.Millisecond)
+		time.Sleep(time.Duration(rand.Intn(150)+2*HeartBeatDuration) * time.Millisecond)
 		rf.mu.Lock()
-		if periodicalTime > rf.lastReceivedTime && rf.status == Follower {
+		if periodicalTime > rf.lastReceivedTime && rf.status == Follower { //醒了之后发现还没有收到心跳
 			rf.mu.Unlock()
-			rf.Election(periodicalTime)
+			if rf.PreVote(periodicalTime) {
+				rf.Election(periodicalTime)
+			}
 		} else {
 			rf.mu.Unlock()
 		}
@@ -368,14 +384,65 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	go rf.LeaderTicker()
 	return rf
 }
-
-func (rf *Raft) Election(periodicalTime int64) {
+func (rf *Raft) PreVote(periodicalTime int64) bool {
 	rf.mu.Lock()
 	if !(periodicalTime > rf.lastReceivedTime && rf.status == Follower) {
+		return false
+	}
+	rf.status = Candidate
+	respChan := make(chan *RequestVoteReply, len(rf.peers))
+	req := &RequestVoteArgs{
+		Term:            rf.currentTerm + 1,
+		CandidateId:     rf.me,
+		LastCommitIndex: rf.commitIndex,
+		LastCommitTerm:  rf.commitTerm,
+		Type:            PreVote,
+	}
+	rf.mu.Unlock()
+	rf.logger.Printf("prevote, lastReceivedTime:%d,req:%+v", rf.lastReceivedTime, req)
+	voteCount := 1
+	for i := range rf.peers {
+		if i == rf.me {
+			continue
+		}
+		resp := &RequestVoteReply{}
+		rf.logger.Printf("send vote to %d", i)
+		tempI := i
+		go func() {
+			rf.RPCSendRequestVote(tempI, req, resp)
+			respChan <- resp
+		}()
+	}
+	curTime := time.Now().UnixMilli()
+	for voteCount <= len(rf.peers)/2 && curTime+50 >= time.Now().UnixMilli() && rf.status == Candidate {
+		select {
+		case resp := <-respChan:
+			rf.logger.Printf("received prevote,%+v", resp)
+			if resp.VoteGranted {
+				voteCount++
+			}
+			curTime = time.Now().UnixMilli()
+		default:
+		}
+	}
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if voteCount > len(rf.peers)/2 && rf.status == Candidate {
+		rf.logger.Println("prevote true")
+		return true
+	} else {
+		rf.logger.Println("prevote false")
+		rf.status = Follower
+		return false
+	}
+}
+func (rf *Raft) Election(periodicalTime int64) {
+	rf.mu.Lock()
+	if !(periodicalTime > rf.lastReceivedTime && rf.status == Candidate) {
 		return
 	}
 	rf.currentTerm += 1
-	rf.status = Candidate
+	// rf.status = Candidate
 	rf.lastVoteForTerm = rf.currentTerm
 	rf.voteFor = rf.me
 	respChan := make(chan *RequestVoteReply, len(rf.peers))
@@ -384,6 +451,7 @@ func (rf *Raft) Election(periodicalTime int64) {
 		CandidateId:     rf.me,
 		LastCommitIndex: rf.commitIndex,
 		LastCommitTerm:  rf.commitTerm,
+		Type:            TrueVote,
 	}
 	rf.mu.Unlock()
 	rf.logger.Printf("time out, lastReceivedTime:%d,req:%+v", rf.lastReceivedTime, req)
@@ -485,10 +553,10 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	switch req.Status {
 	case Append:
 		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
-		if req.PrevLogIndex == rf.lastAppliedIndex && req.PrevLogTerm == rf.lastAppliedTerm && req.LeaderCommit == rf.commitIndex {
+		if req.PrevLogIndex == rf.lastAppliedIndex && req.PrevLogTerm == rf.lastAppliedTerm && req.LeaderCommit >= rf.commitIndex {
 			//if req.PrevLogIndex == rf.lastAppliedIndex+1 ... //todo 这里不知道为啥当初加一了，后续注意
 			rf.log = append(rf.log, req.Entries...)
-			rf.lastAppliedIndex++
+			rf.lastAppliedIndex += len(req.Entries)
 			rf.lastAppliedTerm = rf.currentTerm
 			rf.logger.Printf("success append entry for req:%+v, self entries:%+v", req, rf.log)
 		} else {
@@ -502,6 +570,10 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 			}
 		}
 	case Commit:
+		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
+		if req.LeaderCommit > rf.lastAppliedIndex { //刚重连就收到了commit的消息
+			return
+		}
 		rf.logger.Printf("self commit index:%d,leader commit:%d", rf.commitIndex, req.LeaderCommit)
 		rf.CommitLog(rf.commitIndex, req.LeaderCommit)
 		rf.commitTerm = rf.currentTerm
@@ -526,7 +598,7 @@ func (rf *Raft) CommitLog(from, to int) {
 }
 func (rf *Raft) LeaderTicker() {
 	for !rf.killed() {
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(HeartBeatDuration * time.Millisecond)
 		rf.mu.Lock()
 		if rf.status == Leader {
 			rf.mu.Unlock()
@@ -609,9 +681,11 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 			//rf.logger.Printf("resp2:%v\n", resp)
 			//rf.logger.Printf("%d\n", resp.SelfId)
 			id := resp.SelfId
-			rf.matchIndex[id] = rf.nextIndex[id]
-			rf.nextIndex[id]++
+			entryLen := len(rf.log[rf.matchIndex[id]+1:])
+			rf.matchIndex[id] += entryLen
+			rf.nextIndex[id] += entryLen
 		}
+		//todo 缺少消息对不上的处理
 	case Commit:
 		return true //todo
 	default:
