@@ -87,7 +87,7 @@ type Raft struct {
 
 	currentTerm     int
 	voteFor         int
-	lastVoteForTerm int
+	lastVoteForTime int64
 	log             []LogEntry
 
 	commitIndex      int //已提交的最高的index
@@ -197,31 +197,29 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 	candidateTerm := req.Term
 
 	if req.Type == PreVote {
+		rf.logger.Printf("time:%d, votefor:%d", time.Now().UnixMilli()-rf.lastReceivedTime, rf.voteFor)
 		resp.VoteGranted = false
-		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.lastVoteForTerm < candidateTerm) && (rf.currentTerm < req.Term || (rf.currentTerm == req.Term && rf.commitIndex < req.LastCommitIndex)) {
+		resp.SelfId = rf.me
+		resp.Term = rf.currentTerm
+		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && (rf.currentTerm < req.Term || (rf.currentTerm == req.Term && rf.commitIndex < req.LastCommitIndex)) {
 			resp.VoteGranted = true
-			resp.SelfId = rf.me
-			resp.Term = rf.currentTerm
 			rf.voteFor = req.CandidateId
-			rf.lastVoteForTerm = candidateTerm
+			rf.lastVoteForTime = time.Now().UnixMilli()
 		}
 		return
 	}
 
 	if rf.voteFor == req.CandidateId && candidateTerm > rf.currentTerm && req.LastCommitIndex >= rf.commitIndex && req.LastCommitTerm >= rf.lastAppliedTerm {
 		rf.voteFor = req.CandidateId
-		rf.lastVoteForTerm = candidateTerm
 		rf.status = Follower
-
+		rf.currentTerm = candidateTerm
 		resp.Term = candidateTerm
-		resp.LastCommitIndex = rf.lastAppliedIndex
-		resp.LastCommitTerm = rf.lastAppliedTerm
+		resp.LastCommitIndex = rf.commitIndex
+		resp.LastCommitTerm = rf.commitTerm
 		resp.VoteGranted = true
 		resp.SelfId = rf.me
+		rf.lastVoteForTime = time.Now().UnixMilli()
 		rf.logger.Printf("vote for %d,time:%d", req.CandidateId, rf.lastReceivedTime)
-	}
-	if req.Term > rf.currentTerm {
-		rf.currentTerm = req.Term
 	}
 }
 
@@ -333,6 +331,7 @@ func (rf *Raft) Ticker() {
 		time.Sleep(time.Duration(rand.Intn(150)+2*HeartBeatDuration) * time.Millisecond)
 		rf.mu.Lock()
 		if periodicalTime > rf.lastReceivedTime && rf.status == Follower { //醒了之后发现还没有收到心跳
+			rf.voteFor = NotVote
 			rf.mu.Unlock()
 			if rf.PreVote(periodicalTime) {
 				rf.Election(periodicalTime)
@@ -443,7 +442,6 @@ func (rf *Raft) Election(periodicalTime int64) {
 	}
 	rf.currentTerm += 1
 	// rf.status = Candidate
-	rf.lastVoteForTerm = rf.currentTerm
 	rf.voteFor = rf.me
 	respChan := make(chan *RequestVoteReply, len(rf.peers))
 	req := &RequestVoteArgs{
@@ -469,7 +467,7 @@ func (rf *Raft) Election(periodicalTime int64) {
 		}()
 	}
 	curTime := time.Now().UnixMilli()
-	for voteCount <= len(rf.peers)/2 && curTime+50 >= time.Now().UnixMilli() && rf.status == Candidate {
+	for voteCount < len(rf.peers) && curTime+50 >= time.Now().UnixMilli() && rf.status == Candidate {
 		select {
 		case resp := <-respChan:
 			rf.logger.Printf("received vote,%+v", resp)
@@ -491,6 +489,7 @@ func (rf *Raft) Election(periodicalTime int64) {
 	} else {
 		rf.status = Follower
 	}
+	rf.voteFor = NotVote
 }
 
 type AppendEntriesStatus int
@@ -538,13 +537,13 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 		return
 	}
 	rf.lastReceivedTime = time.Now().UnixMilli()
+	rf.voteFor = NotVote
 	//rf.logger.Printf("append entries time:%d", rf.lastReceivedTime)
 
 	//leader校验
 	if req.Term > rf.currentTerm && req.LeaderCommit >= rf.commitIndex {
-		rf.logger.Printf("become a follower with leader:%d", req.LeaderId)
+		rf.logger.Printf("become a follower with notifier:%d", req.LeaderId)
 		rf.currentTerm = req.Term
-		rf.voteFor = NotVote
 		rf.status = Follower
 	}
 	resp.Term, resp.Success = rf.currentTerm, true
@@ -553,15 +552,17 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	switch req.Status {
 	case Append:
 		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
-		if req.PrevLogIndex == rf.lastAppliedIndex && req.PrevLogTerm == rf.lastAppliedTerm && req.LeaderCommit >= rf.commitIndex {
+		if req.PrevLogIndex <= rf.lastAppliedIndex && req.PrevLogTerm == rf.log[req.PrevLogIndex].Term && req.LeaderCommit >= rf.commitIndex {
 			//if req.PrevLogIndex == rf.lastAppliedIndex+1 ... //todo 这里不知道为啥当初加一了，后续注意
+			rf.log = rf.log[:req.PrevLogIndex+1]
+			rf.lastAppliedIndex = len(rf.log) - 1
 			rf.log = append(rf.log, req.Entries...)
 			rf.lastAppliedIndex += len(req.Entries)
 			rf.lastAppliedTerm = rf.currentTerm
 			rf.logger.Printf("success append entry for req:%+v, self entries:%+v", req, rf.log)
 		} else {
 			//自己的内容更新
-			if req.PrevLogTerm < rf.lastAppliedTerm || req.PrevLogIndex < rf.lastAppliedIndex || req.LeaderCommit < rf.commitIndex { //leader超时后重连，在未变成follower之前有可能会发消息
+			if req.PrevLogTerm != rf.log[req.PrevLogIndex].Term || req.PrevLogIndex > rf.lastAppliedIndex || req.LeaderCommit < rf.commitIndex { //leader超时后重连，在未变成follower之前有可能会发消息
 				resp.Success = false
 				rf.logger.Printf("receive command, but false,req:%+v,self applied term:%d,self applied index:%d,self applied commit index:%d", req, rf.lastAppliedTerm, rf.lastAppliedIndex, rf.commitIndex)
 			} else { //由于follower个人原因导致log缺失，需要补全
@@ -674,9 +675,6 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 	switch status {
 	case Append:
 		//rf.logger.Printf("len:%d\n", len(successResp))
-		if count+1 <= len(rf.peers)/2 || rf.status != Leader { //+1是自己
-			return false
-		}
 		for _, resp := range successResp {
 			//rf.logger.Printf("resp2:%v\n", resp)
 			//rf.logger.Printf("%d\n", resp.SelfId)
@@ -684,6 +682,9 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 			entryLen := len(rf.log[rf.matchIndex[id]+1:])
 			rf.matchIndex[id] += entryLen
 			rf.nextIndex[id] += entryLen
+		}
+		if count+1 <= len(rf.peers)/2 || rf.status != Leader { //+1是自己
+			return false
 		}
 		//todo 缺少消息对不上的处理
 	case Commit:

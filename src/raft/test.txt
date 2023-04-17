@@ -1,0 +1,793 @@
+16:50:03.875253 0:i was born
+16:50:03.875491 1:i was born
+16:50:03.875537 2:i was born
+Test (2B): rejoin of partitioned leader ...
+16:50:04.282271 0:prevote, lastReceivedTime:0,req:&{Term:1 CandidateId:0 LastCommitIndex:0 LastCommitTerm:0 Type:0}
+16:50:04.282302 0:send vote to 1
+16:50:04.282314 0:send vote to 2
+16:50:04.288407 2:receive requestVote:&{Term:1 CandidateId:0 LastCommitIndex:0 LastCommitTerm:0 Type:0}, currentTerm:0,commitIndex:0
+16:50:04.288438 2:time:1681721404288, votefor:-999
+16:50:04.288537 0:received prevote,&{Term:0 VoteGranted:true SelfId:2 LastCommitIndex:0 LastCommitTerm:0}
+16:50:04.288547 0:prevote true
+16:50:04.288554 0:time out, lastReceivedTime:0,req:&{Term:1 CandidateId:0 LastCommitIndex:0 LastCommitTerm:0 Type:1}
+16:50:04.288558 0:send vote to 1
+16:50:04.288563 0:send vote to 2
+16:50:04.288815 1:receive requestVote:&{Term:1 CandidateId:0 LastCommitIndex:0 LastCommitTerm:0 Type:0}, currentTerm:0,commitIndex:0
+16:50:04.288877 1:time:1681721404288, votefor:-999
+16:50:04.289142 1:receive requestVote:&{Term:1 CandidateId:0 LastCommitIndex:0 LastCommitTerm:0 Type:1}, currentTerm:0,commitIndex:0
+16:50:04.289206 1:vote for 0,time:0
+16:50:04.289345 0:received vote,&{Term:1 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:04.289515 2:receive requestVote:&{Term:1 CandidateId:0 LastCommitIndex:0 LastCommitTerm:0 Type:1}, currentTerm:0,commitIndex:0
+16:50:04.289575 2:vote for 0,time:0
+16:50:04.289720 0:received vote,&{Term:1 VoteGranted:true SelfId:2 LastCommitIndex:0 LastCommitTerm:0}
+16:50:04.289732 0:become a leader
+16:50:04.289776 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:1}
+16:50:04.289790 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2}
+16:50:04.290234 2:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2},current term:1
+16:50:04.290449 0:resp1:&{1 true 2 0 0 2 0 0}
+16:50:04.290759 1:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:1},current term:1
+16:50:04.290935 0:resp1:&{1 true 1 0 0 1 0 0}
+16:50:04.390030 0:begin to send command:{Command:101 Term:1}
+16:50:04.390066 0:logs:[{Command:<nil> Term:0} {Command:101 Term:1}]
+2023/04/17 16:50:04 nd:0,expect:3
+16:50:04.390140 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1}] LeaderCommit:0 Status:1 SelfId:1}
+16:50:04.390151 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1}] LeaderCommit:0 Status:1 SelfId:2}
+16:50:04.390603 2:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1}] LeaderCommit:0 Status:1 SelfId:2},current term:1
+16:50:04.390705 2:prevlogidx:0 lastApplied:0 prevlogTerm:0 lastTerm:0 ldcommit:0 commitidx:0
+16:50:04.390778 2:success append entry for req:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1}] LeaderCommit:0 Status:1 SelfId:2}, self entries:[{Command:<nil> Term:0} {Command:101 Term:1}]
+16:50:04.390982 0:resp1:&{1 true 2 0 0 2 0 0}
+16:50:04.391205 1:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1}] LeaderCommit:0 Status:1 SelfId:1},current term:1
+16:50:04.391269 1:prevlogidx:0 lastApplied:0 prevlogTerm:0 lastTerm:0 ldcommit:0 commitidx:0
+16:50:04.391339 1:success append entry for req:&{Term:1 LeaderId:0 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1}] LeaderCommit:0 Status:1 SelfId:1}, self entries:[{Command:<nil> Term:0} {Command:101 Term:1}]
+16:50:04.391503 0:resp1:&{1 true 1 0 0 1 0 0}
+2023/04/17 16:50:04 nd:0,expect:3
+2023/04/17 16:50:04 nd:0,expect:3
+2023/04/17 16:50:04 nd:0,expect:3
+2023/04/17 16:50:04 nd:0,expect:3
+16:50:04.491014 0:commit msg for start:1,end:1
+16:50:04.491066 0:commit msg for command:{CommandValid:true Command:101 CommandIndex:1 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:1,to:1
+16:50:04.491094 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:2 SelfId:1}
+16:50:04.491106 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:2 SelfId:2}
+16:50:04.491278 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:04.491294 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2}
+16:50:04.491336 2:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:2 SelfId:2},current term:1
+16:50:04.491344 2:prevlogidx:1 lastApplied:1 prevlogTerm:1 lastTerm:1 ldcommit:1 commitidx:0
+16:50:04.491348 2:self commit index:0,leader commit:1
+16:50:04.491352 2:commit msg for start:1,end:1
+16:50:04.491360 2:commit msg for command:{CommandValid:true Command:101 CommandIndex:1 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:1,to:1
+16:50:04.491749 1:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:2 SelfId:1},current term:1
+16:50:04.491759 1:prevlogidx:1 lastApplied:1 prevlogTerm:1 lastTerm:1 ldcommit:1 commitidx:0
+16:50:04.491763 1:self commit index:0,leader commit:1
+16:50:04.491773 1:commit msg for start:1,end:1
+16:50:04.491781 1:commit msg for command:{CommandValid:true Command:101 CommandIndex:1 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:1,to:1
+16:50:04.491982 1:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1},current term:1
+2023/04/17 16:50:04 server:0,index:1,command:101,count:1
+2023/04/17 16:50:04 server:1,index:1,command:101,count:2
+2023/04/17 16:50:04 server:2,index:1,command:101,count:3
+2023/04/17 16:50:04 nd:3,expect:3
+2023/04/17 16:50:04 cmd1:101,cmd:101
+16:50:04.492206 0:resp1:&{1 true 1 0 0 1 0 0}
+16:50:04.492354 2:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2},current term:1
+16:50:04.492454 0:resp1:&{1 true 2 0 0 2 0 0}
+16:50:04.792515 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:04.792550 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2}
+16:50:04.794310 2:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2},current term:1
+16:50:04.794421 0:resp1:&{1 true 2 0 0 2 0 0}
+16:50:04.794661 1:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1},current term:1
+16:50:04.794832 0:resp1:&{1 true 1 0 0 1 0 0}
+16:50:05.021211 0:begin to send command:{Command:102 Term:1}
+16:50:05.021253 0:logs:[{Command:<nil> Term:0} {Command:101 Term:1} {Command:102 Term:1}]
+16:50:05.021268 0:begin to send command:{Command:103 Term:1}
+16:50:05.021275 0:logs:[{Command:<nil> Term:0} {Command:101 Term:1} {Command:102 Term:1} {Command:103 Term:1}]
+16:50:05.021281 0:begin to send command:{Command:104 Term:1}
+16:50:05.021307 0:logs:[{Command:<nil> Term:0} {Command:101 Term:1} {Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}]
+16:50:05.021372 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:1}
+16:50:05.021386 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:2}
+16:50:05.122071 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:1}
+16:50:05.122126 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:2}
+16:50:05.223061 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:1}
+16:50:05.223101 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:2}
+16:50:05.281290 1:prevote, lastReceivedTime:1681721404794,req:&{Term:2 CandidateId:1 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:05.281315 1:send vote to 0
+16:50:05.281322 1:send vote to 2
+16:50:05.288165 2:receive requestVote:&{Term:2 CandidateId:1 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:1,commitIndex:1
+16:50:05.288271 2:time:494, votefor:-999
+16:50:05.288446 1:received prevote,&{Term:1 VoteGranted:true SelfId:2 LastCommitIndex:0 LastCommitTerm:0}
+16:50:05.288508 1:prevote true
+16:50:05.289196 1:time out, lastReceivedTime:1681721404794,req:&{Term:2 CandidateId:1 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:05.289292 1:send vote to 0
+16:50:05.289354 1:send vote to 2
+16:50:05.293452 2:receive requestVote:&{Term:2 CandidateId:1 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:1,commitIndex:1
+16:50:05.293537 2:vote for 1,time:1681721404794
+16:50:05.293712 1:received vote,&{Term:2 VoteGranted:true SelfId:2 LastCommitIndex:1 LastCommitTerm:1}
+16:50:05.324029 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:05.324063 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2}
+16:50:05.337229 2:prevote, lastReceivedTime:1681721404794,req:&{Term:3 CandidateId:2 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:05.337245 2:send vote to 0
+16:50:05.337251 2:send vote to 1
+16:50:05.337705 1:receive requestVote:&{Term:3 CandidateId:2 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:2,commitIndex:1
+16:50:05.337715 1:time:543, votefor:1
+16:50:05.337869 2:received prevote,&{Term:2 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:05.337877 2:prevote true
+16:50:05.337884 2:time out, lastReceivedTime:1681721404794,req:&{Term:3 CandidateId:2 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:05.337888 2:send vote to 0
+16:50:05.337896 2:send vote to 1
+16:50:05.339759 1:receive requestVote:&{Term:3 CandidateId:2 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:2,commitIndex:1
+16:50:05.339769 1:vote for 2,time:1681721404794
+16:50:05.339921 2:received vote,&{Term:3 VoteGranted:true SelfId:1 LastCommitIndex:1 LastCommitTerm:1}
+16:50:05.390018 2:become a leader
+16:50:05.390266 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:1 Status:0 SelfId:0}
+16:50:05.390345 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:05.390746 1:receive append entries:&{Term:3 LeaderId:2 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1},current term:3
+16:50:05.390916 2:resp1:&{3 true 1 0 0 1 0 0}
+16:50:05.491026 2:begin to send command:{Command:103 Term:3}
+16:50:05.491064 2:logs:[{Command:<nil> Term:0} {Command:101 Term:1} {Command:103 Term:3}]
+2023/04/17 16:50:05 nd:0,expect:2
+16:50:05.491129 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1} {Command:103 Term:3}] LeaderCommit:1 Status:1 SelfId:0}
+16:50:05.491140 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:103 Term:3}] LeaderCommit:1 Status:1 SelfId:1}
+16:50:05.491594 1:receive append entries:&{Term:3 LeaderId:2 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:103 Term:3}] LeaderCommit:1 Status:1 SelfId:1},current term:3
+16:50:05.491611 1:prevlogidx:1 lastApplied:1 prevlogTerm:1 lastTerm:1 ldcommit:1 commitidx:1
+16:50:05.491628 1:success append entry for req:&{Term:3 LeaderId:2 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:103 Term:3}] LeaderCommit:1 Status:1 SelfId:1}, self entries:[{Command:<nil> Term:0} {Command:101 Term:1} {Command:103 Term:3}]
+16:50:05.491741 2:resp1:&{3 true 1 0 0 1 0 0}
+2023/04/17 16:50:05 nd:0,expect:2
+2023/04/17 16:50:05 nd:0,expect:2
+2023/04/17 16:50:05 nd:0,expect:2
+2023/04/17 16:50:05 nd:0,expect:2
+16:50:05.592073 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:1 Status:0 SelfId:0}
+16:50:05.592112 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:05.592546 1:receive append entries:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:1 Status:0 SelfId:1},current term:3
+16:50:05.592643 2:resp1:&{3 true 1 0 0 1 0 0}
+2023/04/17 16:50:05 nd:0,expect:2
+2023/04/17 16:50:05 nd:0,expect:2
+16:50:05.626022 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:05.626045 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2}
+2023/04/17 16:50:05 nd:0,expect:2
+2023/04/17 16:50:05 nd:0,expect:2
+2023/04/17 16:50:05 nd:0,expect:2
+16:50:05.693014 2:commit msg for start:2,end:2
+16:50:05.693044 2:commit msg for command:{CommandValid:true Command:103 CommandIndex:2 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:2,to:2
+16:50:05.693061 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:101 Term:1} {Command:103 Term:3}] LeaderCommit:2 Status:2 SelfId:0}
+16:50:05.693074 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:2 SelfId:1}
+16:50:05.693338 1:receive append entries:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:2 SelfId:1},current term:3
+16:50:05.693354 1:prevlogidx:2 lastApplied:2 prevlogTerm:3 lastTerm:3 ldcommit:2 commitidx:1
+16:50:05.693358 1:self commit index:1,leader commit:2
+16:50:05.693362 1:commit msg for start:2,end:2
+16:50:05.693373 1:commit msg for command:{CommandValid:true Command:103 CommandIndex:2 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:2,to:2
+2023/04/17 16:50:05 server:1,index:2,command:103,count:1
+2023/04/17 16:50:05 server:2,index:2,command:103,count:2
+2023/04/17 16:50:05 nd:2,expect:2
+2023/04/17 16:50:05 cmd1:103,cmd:103
+16:50:05.893072 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:05.893111 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:05.893532 1:receive append entries:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1},current term:3
+16:50:05.893633 2:resp1:&{3 true 1 0 0 1 0 0}
+16:50:05.927408 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:05.927448 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2}
+16:50:06.195078 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:06.195121 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:06.195635 1:receive append entries:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1},current term:3
+16:50:06.195756 2:resp1:&{3 true 1 0 0 1 0 0}
+16:50:06.228366 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:1}
+16:50:06.228486 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[] LeaderCommit:1 Status:0 SelfId:2}
+16:50:06.329029 0:begin to send command:{Command:104 Term:1}
+16:50:06.329064 0:logs:[{Command:<nil> Term:0} {Command:101 Term:1} {Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1} {Command:104 Term:1}]
+2023/04/17 16:50:06 nd:0,expect:2
+16:50:06.329166 0:send heartbeat to 1,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:1}
+16:50:06.329196 0:send heartbeat to 2,info:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:2}
+16:50:06.329534 1:receive append entries:&{Term:1 LeaderId:0 PrevLogIndex:1 PrevLogTerm:1 Entries:[{Command:102 Term:1} {Command:103 Term:1} {Command:104 Term:1} {Command:104 Term:1}] LeaderCommit:1 Status:1 SelfId:1},current term:3
+16:50:06.329656 0:become a follower with leader:1
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+16:50:06.496968 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:06.497011 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:06.496968 0:prevote, lastReceivedTime:0,req:&{Term:4 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:06.497342 0:send vote to 1
+16:50:06.497398 0:send vote to 2
+16:50:06.498921 1:receive requestVote:&{Term:4 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:3,commitIndex:2
+16:50:06.498934 1:time:303, votefor:-999
+16:50:06.499037 0:received prevote,&{Term:3 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:06.499045 0:prevote true
+16:50:06.499053 0:time out, lastReceivedTime:0,req:&{Term:4 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:06.499057 0:send vote to 1
+16:50:06.499063 0:send vote to 2
+16:50:06.499356 1:receive requestVote:&{Term:4 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:3,commitIndex:2
+16:50:06.499446 0:received vote,&{Term:3 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+16:50:06.744167 1:prevote, lastReceivedTime:1681721406195,req:&{Term:4 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:06.744184 1:send vote to 0
+16:50:06.744197 1:send vote to 2
+16:50:06.744481 0:receive requestVote:&{Term:4 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:4,commitIndex:1
+16:50:06.744503 0:time:1681721406744, votefor:-999
+16:50:06.744657 1:received prevote,&{Term:4 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:06.744671 1:prevote true
+16:50:06.744680 1:time out, lastReceivedTime:1681721406195,req:&{Term:4 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:06.744684 1:send vote to 0
+16:50:06.744692 1:send vote to 2
+16:50:06.744865 0:receive requestVote:&{Term:4 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:4,commitIndex:1
+16:50:06.746748 1:received vote,&{Term:4 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+16:50:06.798759 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:06.798790 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+2023/04/17 16:50:06 nd:0,expect:2
+16:50:07.004714 0:prevote, lastReceivedTime:0,req:&{Term:5 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:07.004732 0:send vote to 1
+16:50:07.004745 0:send vote to 2
+16:50:07.005068 1:receive requestVote:&{Term:5 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:4,commitIndex:2
+16:50:07.005080 1:time:810, votefor:-999
+16:50:07.005182 0:received prevote,&{Term:4 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:07.005189 0:prevote true
+16:50:07.005196 0:time out, lastReceivedTime:0,req:&{Term:5 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:07.005201 0:send vote to 1
+16:50:07.005206 0:send vote to 2
+16:50:07.005351 1:receive requestVote:&{Term:5 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:4,commitIndex:2
+16:50:07.005439 0:received vote,&{Term:4 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:07.099820 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:07.099856 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:07.272777 1:prevote, lastReceivedTime:1681721406195,req:&{Term:5 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:07.272798 1:send vote to 0
+16:50:07.272812 1:send vote to 2
+16:50:07.273115 0:receive requestVote:&{Term:5 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:5,commitIndex:1
+16:50:07.273194 0:time:1681721407273, votefor:-999
+16:50:07.273434 1:received prevote,&{Term:5 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:07.273451 1:prevote true
+16:50:07.273461 1:time out, lastReceivedTime:1681721406195,req:&{Term:5 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:07.273465 1:send vote to 0
+16:50:07.273474 1:send vote to 2
+16:50:07.273715 0:receive requestVote:&{Term:5 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:5,commitIndex:1
+16:50:07.273873 1:received vote,&{Term:5 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:07.400563 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:07.400604 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:07.573843 0:prevote, lastReceivedTime:0,req:&{Term:6 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:07.573860 0:send vote to 1
+16:50:07.573883 0:send vote to 2
+16:50:07.574162 1:receive requestVote:&{Term:6 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:5,commitIndex:2
+16:50:07.574179 1:time:1379, votefor:-999
+16:50:07.574290 0:received prevote,&{Term:5 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:07.574311 0:prevote true
+16:50:07.574319 0:time out, lastReceivedTime:0,req:&{Term:6 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:07.574323 0:send vote to 1
+16:50:07.574339 0:send vote to 2
+16:50:07.574498 1:receive requestVote:&{Term:6 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:5,commitIndex:2
+16:50:07.574606 0:received vote,&{Term:5 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:07.701876 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:07.701910 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:07.811252 1:prevote, lastReceivedTime:1681721406195,req:&{Term:6 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:07.811273 1:send vote to 0
+16:50:07.811285 1:send vote to 2
+16:50:07.811652 0:receive requestVote:&{Term:6 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:6,commitIndex:1
+16:50:07.811741 0:time:1681721407811, votefor:-999
+16:50:07.811984 1:received prevote,&{Term:6 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:07.812001 1:prevote true
+16:50:07.812011 1:time out, lastReceivedTime:1681721406195,req:&{Term:6 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:07.812015 1:send vote to 0
+16:50:07.812024 1:send vote to 2
+16:50:07.812295 0:receive requestVote:&{Term:6 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:6,commitIndex:1
+16:50:07.812442 1:received vote,&{Term:6 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+2023/04/17 16:50:07 nd:0,expect:2
+16:50:08.002823 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:08.002866 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+16:50:08.103887 0:prevote, lastReceivedTime:0,req:&{Term:7 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:08.103908 0:send vote to 1
+16:50:08.103920 0:send vote to 2
+16:50:08.104224 1:receive requestVote:&{Term:7 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:6,commitIndex:2
+16:50:08.104236 1:time:1909, votefor:-999
+16:50:08.104329 0:received prevote,&{Term:6 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.104337 0:prevote true
+16:50:08.104345 0:time out, lastReceivedTime:0,req:&{Term:7 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:08.104349 0:send vote to 1
+16:50:08.104355 0:send vote to 2
+16:50:08.104564 1:receive requestVote:&{Term:7 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:6,commitIndex:2
+16:50:08.104651 0:received vote,&{Term:6 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+2023/04/17 16:50:08 nd:0,expect:2
+16:50:08.303458 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:08.303503 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+2023/04/17 16:50:08 nd:0,expect:2
+16:50:08.328777 1:prevote, lastReceivedTime:1681721406195,req:&{Term:7 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:08.328802 1:send vote to 0
+16:50:08.328811 1:send vote to 2
+16:50:08.338684 0:receive requestVote:&{Term:7 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:7,commitIndex:1
+16:50:08.338780 0:time:1681721408338, votefor:-999
+16:50:08.339013 1:received prevote,&{Term:7 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.339077 1:prevote true
+16:50:08.339137 1:time out, lastReceivedTime:1681721406195,req:&{Term:7 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:08.339193 1:send vote to 0
+16:50:08.339260 1:send vote to 2
+16:50:08.339447 0:receive requestVote:&{Term:7 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:7,commitIndex:1
+16:50:08.339760 1:received vote,&{Term:7 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.604838 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:08.604913 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:08.608980 0:prevote, lastReceivedTime:0,req:&{Term:8 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:08.609064 0:send vote to 1
+16:50:08.609132 0:send vote to 2
+16:50:08.609352 1:receive requestVote:&{Term:8 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:7,commitIndex:2
+16:50:08.609441 1:time:2414, votefor:-999
+16:50:08.609648 0:received prevote,&{Term:7 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.609708 0:prevote true
+16:50:08.609767 0:time out, lastReceivedTime:0,req:&{Term:8 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:08.609823 0:send vote to 1
+16:50:08.609888 0:send vote to 2
+16:50:08.610087 1:receive requestVote:&{Term:8 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:7,commitIndex:2
+16:50:08.610361 0:received vote,&{Term:7 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.860972 1:prevote, lastReceivedTime:1681721406195,req:&{Term:8 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:08.861004 1:send vote to 0
+16:50:08.861017 1:send vote to 2
+16:50:08.861355 0:receive requestVote:&{Term:8 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:8,commitIndex:1
+16:50:08.861435 0:time:1681721408861, votefor:-999
+16:50:08.861612 1:received prevote,&{Term:8 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.861628 1:prevote true
+16:50:08.861638 1:time out, lastReceivedTime:1681721406195,req:&{Term:8 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:08.861642 1:send vote to 0
+16:50:08.861651 1:send vote to 2
+16:50:08.861916 0:receive requestVote:&{Term:8 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:8,commitIndex:1
+16:50:08.862120 1:received vote,&{Term:8 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:08.905432 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:08.905468 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:09.114252 0:prevote, lastReceivedTime:0,req:&{Term:9 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:09.114288 0:send vote to 1
+16:50:09.114301 0:send vote to 2
+16:50:09.114705 1:receive requestVote:&{Term:9 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:8,commitIndex:2
+16:50:09.114784 1:time:2919, votefor:-999
+16:50:09.114960 0:received prevote,&{Term:8 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.114988 0:prevote true
+16:50:09.114998 0:time out, lastReceivedTime:0,req:&{Term:9 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:09.115003 0:send vote to 1
+16:50:09.115027 0:send vote to 2
+16:50:09.115279 1:receive requestVote:&{Term:9 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:8,commitIndex:2
+16:50:09.115452 0:received vote,&{Term:8 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.206214 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:09.206412 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:09.358316 1:prevote, lastReceivedTime:1681721406195,req:&{Term:9 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:09.358346 1:send vote to 0
+16:50:09.358360 1:send vote to 2
+16:50:09.358773 0:receive requestVote:&{Term:9 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:9,commitIndex:1
+16:50:09.358849 0:time:1681721409358, votefor:-999
+16:50:09.359008 1:received prevote,&{Term:9 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.359019 1:prevote true
+16:50:09.359033 1:time out, lastReceivedTime:1681721406195,req:&{Term:9 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:09.359038 1:send vote to 0
+16:50:09.359046 1:send vote to 2
+16:50:09.359261 0:receive requestVote:&{Term:9 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:9,commitIndex:1
+16:50:09.359347 1:received vote,&{Term:9 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.507273 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:09.507313 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:09.715630 0:prevote, lastReceivedTime:0,req:&{Term:10 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:09.715661 0:send vote to 1
+16:50:09.715676 0:send vote to 2
+16:50:09.716004 1:receive requestVote:&{Term:10 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:9,commitIndex:2
+16:50:09.716067 1:time:3521, votefor:-999
+16:50:09.716239 0:received prevote,&{Term:9 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.716249 0:prevote true
+16:50:09.716257 0:time out, lastReceivedTime:0,req:&{Term:10 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:09.716261 0:send vote to 1
+16:50:09.716267 0:send vote to 2
+16:50:09.716428 1:receive requestVote:&{Term:10 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:9,commitIndex:2
+16:50:09.716511 0:received vote,&{Term:9 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.724839 0:received vote,&{Term:0 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.808806 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:09.808844 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:09.907717 1:prevote, lastReceivedTime:1681721406195,req:&{Term:10 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:09.907752 1:send vote to 0
+16:50:09.907761 1:send vote to 2
+16:50:09.909183 0:receive requestVote:&{Term:10 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:10,commitIndex:1
+16:50:09.909255 0:time:1681721409909, votefor:-999
+16:50:09.909424 1:received prevote,&{Term:10 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.909438 1:prevote true
+16:50:09.909447 1:time out, lastReceivedTime:1681721406195,req:&{Term:10 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:09.909452 1:send vote to 0
+16:50:09.909457 1:send vote to 2
+16:50:09.909695 0:receive requestVote:&{Term:10 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:10,commitIndex:1
+16:50:09.909807 1:received vote,&{Term:10 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:09.913093 1:received vote,&{Term:0 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.110018 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:10.110061 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:10.209598 0:prevote, lastReceivedTime:0,req:&{Term:11 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:10.209753 0:send vote to 1
+16:50:10.209827 0:send vote to 2
+16:50:10.210079 1:receive requestVote:&{Term:11 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:10,commitIndex:2
+16:50:10.210171 1:time:4015, votefor:-999
+16:50:10.210380 0:received prevote,&{Term:10 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.210441 0:prevote true
+16:50:10.210500 0:time out, lastReceivedTime:0,req:&{Term:11 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:10.210556 0:send vote to 1
+16:50:10.210622 0:send vote to 2
+16:50:10.210895 1:receive requestVote:&{Term:11 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:10,commitIndex:2
+16:50:10.211151 0:received vote,&{Term:10 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.411399 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:10.411441 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:10.481711 1:prevote, lastReceivedTime:1681721406195,req:&{Term:11 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:10.481742 1:send vote to 0
+16:50:10.481749 1:send vote to 2
+16:50:10.496714 0:receive requestVote:&{Term:11 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:11,commitIndex:1
+16:50:10.496847 0:time:1681721410496, votefor:-999
+16:50:10.497029 1:received prevote,&{Term:11 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.497092 1:prevote true
+16:50:10.497153 1:time out, lastReceivedTime:1681721406195,req:&{Term:11 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:10.497209 1:send vote to 0
+16:50:10.497275 1:send vote to 2
+16:50:10.497455 0:receive requestVote:&{Term:11 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:11,commitIndex:1
+16:50:10.497726 1:received vote,&{Term:11 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.712500 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:10.712538 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:10.715645 0:prevote, lastReceivedTime:0,req:&{Term:12 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:10.715740 0:send vote to 1
+16:50:10.715802 0:send vote to 2
+16:50:10.716086 1:receive requestVote:&{Term:12 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:11,commitIndex:2
+16:50:10.716095 1:time:4521, votefor:-999
+16:50:10.718058 0:received prevote,&{Term:11 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.718125 0:prevote true
+16:50:10.718185 0:time out, lastReceivedTime:0,req:&{Term:12 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:10.718241 0:send vote to 1
+16:50:10.718300 0:send vote to 2
+16:50:10.718515 1:receive requestVote:&{Term:12 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:11,commitIndex:2
+16:50:10.720895 0:received vote,&{Term:11 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.986030 1:prevote, lastReceivedTime:1681721406195,req:&{Term:12 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:10.986059 1:send vote to 0
+16:50:10.986072 1:send vote to 2
+16:50:10.986413 0:receive requestVote:&{Term:12 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:12,commitIndex:1
+16:50:10.986494 0:time:1681721410986, votefor:-999
+16:50:10.986665 1:received prevote,&{Term:12 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:10.986676 1:prevote true
+16:50:10.986684 1:time out, lastReceivedTime:1681721406195,req:&{Term:12 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:10.986688 1:send vote to 0
+16:50:10.986692 1:send vote to 2
+16:50:10.986860 0:receive requestVote:&{Term:12 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:12,commitIndex:1
+16:50:10.986959 1:received vote,&{Term:12 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.013345 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:11.013474 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:11.232188 0:prevote, lastReceivedTime:0,req:&{Term:13 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:11.232215 0:send vote to 1
+16:50:11.232227 0:send vote to 2
+16:50:11.232597 1:receive requestVote:&{Term:13 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:12,commitIndex:2
+16:50:11.232663 1:time:5037, votefor:-999
+16:50:11.232821 0:received prevote,&{Term:12 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.232835 0:prevote true
+16:50:11.232844 0:time out, lastReceivedTime:0,req:&{Term:13 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:11.232848 0:send vote to 1
+16:50:11.232853 0:send vote to 2
+16:50:11.233033 1:receive requestVote:&{Term:13 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:12,commitIndex:2
+16:50:11.233116 0:received vote,&{Term:12 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.314050 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:11.314096 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:11.528253 1:prevote, lastReceivedTime:1681721406195,req:&{Term:13 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:11.528277 1:send vote to 0
+16:50:11.528290 1:send vote to 2
+16:50:11.529480 0:receive requestVote:&{Term:13 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:13,commitIndex:1
+16:50:11.529552 0:time:1681721411529, votefor:-999
+16:50:11.529731 1:received prevote,&{Term:13 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.529745 1:prevote true
+16:50:11.529753 1:time out, lastReceivedTime:1681721406195,req:&{Term:13 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:11.529768 1:send vote to 0
+16:50:11.529773 1:send vote to 2
+16:50:11.530006 0:receive requestVote:&{Term:13 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:13,commitIndex:1
+16:50:11.530149 1:received vote,&{Term:13 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.617030 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:11.617087 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:11.726747 0:prevote, lastReceivedTime:0,req:&{Term:14 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:11.726777 0:send vote to 1
+16:50:11.726790 0:send vote to 2
+16:50:11.727216 1:receive requestVote:&{Term:14 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:13,commitIndex:2
+16:50:11.727287 1:time:5532, votefor:-999
+16:50:11.727462 0:received prevote,&{Term:13 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.727477 0:prevote true
+16:50:11.727486 0:time out, lastReceivedTime:0,req:&{Term:14 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:11.727490 0:send vote to 1
+16:50:11.727498 0:send vote to 2
+16:50:11.727748 1:receive requestVote:&{Term:14 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:13,commitIndex:2
+16:50:11.727935 0:received vote,&{Term:13 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:11.918043 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:11.918087 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:12.127807 1:prevote, lastReceivedTime:1681721406195,req:&{Term:14 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:12.127843 1:send vote to 0
+16:50:12.127855 1:send vote to 2
+16:50:12.128207 0:receive requestVote:&{Term:14 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:14,commitIndex:1
+16:50:12.128278 0:time:1681721412128, votefor:-999
+16:50:12.128423 1:received prevote,&{Term:14 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.128436 1:prevote true
+16:50:12.128444 1:time out, lastReceivedTime:1681721406195,req:&{Term:14 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:12.128448 1:send vote to 0
+16:50:12.128454 1:send vote to 2
+16:50:12.128683 0:receive requestVote:&{Term:14 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:14,commitIndex:1
+16:50:12.128853 1:received vote,&{Term:14 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.219691 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:12.219735 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:12.235029 0:prevote, lastReceivedTime:0,req:&{Term:15 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:12.235142 0:send vote to 1
+16:50:12.235205 0:send vote to 2
+16:50:12.235458 1:receive requestVote:&{Term:15 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:14,commitIndex:2
+16:50:12.241553 1:time:6046, votefor:-999
+16:50:12.241739 0:received prevote,&{Term:14 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.241801 0:prevote true
+16:50:12.241861 0:time out, lastReceivedTime:0,req:&{Term:15 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:12.241917 0:send vote to 1
+16:50:12.241979 0:send vote to 2
+16:50:12.242162 1:receive requestVote:&{Term:15 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:14,commitIndex:2
+16:50:12.242438 0:received vote,&{Term:14 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.520107 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:12.520151 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:12.652238 1:prevote, lastReceivedTime:1681721406195,req:&{Term:15 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:12.652268 1:send vote to 0
+16:50:12.652281 1:send vote to 2
+16:50:12.652687 0:receive requestVote:&{Term:15 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:15,commitIndex:1
+16:50:12.652764 0:time:1681721412652, votefor:-999
+16:50:12.652938 1:received prevote,&{Term:15 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.652954 1:prevote true
+16:50:12.652964 1:time out, lastReceivedTime:1681721406195,req:&{Term:15 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:12.652968 1:send vote to 0
+16:50:12.652977 1:send vote to 2
+16:50:12.653215 0:receive requestVote:&{Term:15 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:15,commitIndex:1
+16:50:12.653392 1:received vote,&{Term:15 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.738148 0:prevote, lastReceivedTime:0,req:&{Term:16 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:12.738184 0:send vote to 1
+16:50:12.738192 0:send vote to 2
+16:50:12.742992 1:receive requestVote:&{Term:16 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:15,commitIndex:2
+16:50:12.743037 1:time:6548, votefor:-999
+16:50:12.743202 0:received prevote,&{Term:15 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.743216 0:prevote true
+16:50:12.743230 0:time out, lastReceivedTime:0,req:&{Term:16 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:12.743235 0:send vote to 1
+16:50:12.743243 0:send vote to 2
+16:50:12.745642 1:receive requestVote:&{Term:16 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:15,commitIndex:2
+16:50:12.745848 0:received vote,&{Term:15 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:12.821456 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:12.821501 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:13.121567 1:prevote, lastReceivedTime:1681721406195,req:&{Term:16 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:13.121600 1:send vote to 0
+16:50:13.121623 1:send vote to 2
+16:50:13.121950 0:receive requestVote:&{Term:16 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:16,commitIndex:1
+16:50:13.122036 0:time:1681721413122, votefor:-999
+16:50:13.122119 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:13.122186 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:13.126130 1:received prevote,&{Term:16 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.126143 1:prevote true
+16:50:13.126152 1:time out, lastReceivedTime:1681721406195,req:&{Term:16 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:13.126156 1:send vote to 0
+16:50:13.126161 1:send vote to 2
+16:50:13.126297 0:receive requestVote:&{Term:16 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:16,commitIndex:1
+16:50:13.126389 1:received vote,&{Term:16 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.304517 0:prevote, lastReceivedTime:0,req:&{Term:17 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:13.304547 0:send vote to 1
+16:50:13.304563 0:send vote to 2
+16:50:13.305002 1:receive requestVote:&{Term:17 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:16,commitIndex:2
+16:50:13.305076 1:time:7110, votefor:-999
+16:50:13.305247 0:received prevote,&{Term:16 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.305264 0:prevote true
+16:50:13.305273 0:time out, lastReceivedTime:0,req:&{Term:17 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:13.305277 0:send vote to 1
+16:50:13.305286 0:send vote to 2
+16:50:13.305544 1:receive requestVote:&{Term:17 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:16,commitIndex:2
+16:50:13.305709 0:received vote,&{Term:16 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.423462 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:13.423507 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:13.701637 1:prevote, lastReceivedTime:1681721406195,req:&{Term:17 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:13.701663 1:send vote to 0
+16:50:13.701674 1:send vote to 2
+16:50:13.702036 0:receive requestVote:&{Term:17 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:17,commitIndex:1
+16:50:13.702119 0:time:1681721413702, votefor:-999
+16:50:13.702277 1:received prevote,&{Term:17 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.702288 1:prevote true
+16:50:13.702296 1:time out, lastReceivedTime:1681721406195,req:&{Term:17 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:13.702300 1:send vote to 0
+16:50:13.702305 1:send vote to 2
+16:50:13.702560 0:receive requestVote:&{Term:17 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:17,commitIndex:1
+16:50:13.702741 1:received vote,&{Term:17 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.724926 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:13.725031 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:13.858934 0:prevote, lastReceivedTime:0,req:&{Term:18 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:13.858963 0:send vote to 1
+16:50:13.858975 0:send vote to 2
+16:50:13.859407 1:receive requestVote:&{Term:18 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:17,commitIndex:2
+16:50:13.859476 1:time:7664, votefor:-999
+16:50:13.859675 0:received prevote,&{Term:17 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:13.859685 0:prevote true
+16:50:13.859693 0:time out, lastReceivedTime:0,req:&{Term:18 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:13.859698 0:send vote to 1
+16:50:13.859707 0:send vote to 2
+16:50:13.859945 1:receive requestVote:&{Term:18 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:17,commitIndex:2
+16:50:13.860110 0:received vote,&{Term:17 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.026220 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:14.026266 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:14.230583 1:prevote, lastReceivedTime:1681721406195,req:&{Term:18 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:14.230628 1:send vote to 0
+16:50:14.230642 1:send vote to 2
+16:50:14.230988 0:receive requestVote:&{Term:18 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:18,commitIndex:1
+16:50:14.231058 0:time:1681721414231, votefor:-999
+16:50:14.231231 1:received prevote,&{Term:18 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.231244 1:prevote true
+16:50:14.231253 1:time out, lastReceivedTime:1681721406195,req:&{Term:18 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:14.231257 1:send vote to 0
+16:50:14.231262 1:send vote to 2
+16:50:14.231511 0:receive requestVote:&{Term:18 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:18,commitIndex:1
+16:50:14.231665 1:received vote,&{Term:18 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.327568 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:14.327606 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:14.429353 0:prevote, lastReceivedTime:0,req:&{Term:19 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:14.429390 0:send vote to 1
+16:50:14.429407 0:send vote to 2
+16:50:14.429833 1:receive requestVote:&{Term:19 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:18,commitIndex:2
+16:50:14.429917 1:time:8234, votefor:-999
+16:50:14.430142 0:received prevote,&{Term:18 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.430158 0:prevote true
+16:50:14.430168 0:time out, lastReceivedTime:0,req:&{Term:19 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:14.430172 0:send vote to 1
+16:50:14.430182 0:send vote to 2
+16:50:14.430427 1:receive requestVote:&{Term:19 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:18,commitIndex:2
+16:50:14.430590 0:received vote,&{Term:18 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.628384 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:14.628417 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:14.718194 1:prevote, lastReceivedTime:1681721406195,req:&{Term:19 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:14.718225 1:send vote to 0
+16:50:14.718234 1:send vote to 2
+16:50:14.729203 0:receive requestVote:&{Term:19 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:19,commitIndex:1
+16:50:14.729224 0:time:1681721414729, votefor:-999
+16:50:14.729343 1:received prevote,&{Term:19 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.729358 1:prevote true
+16:50:14.729368 1:time out, lastReceivedTime:1681721406195,req:&{Term:19 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:14.729372 1:send vote to 0
+16:50:14.729378 1:send vote to 2
+16:50:14.729623 0:receive requestVote:&{Term:19 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:19,commitIndex:1
+16:50:14.729814 1:received vote,&{Term:19 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:14.929560 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:14.929597 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:14.997345 0:prevote, lastReceivedTime:0,req:&{Term:20 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:14.997376 0:send vote to 1
+16:50:14.997383 0:send vote to 2
+16:50:15.009943 1:receive requestVote:&{Term:20 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:19,commitIndex:2
+16:50:15.010065 1:time:8815, votefor:-999
+16:50:15.010312 0:received prevote,&{Term:19 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.010682 0:prevote true
+16:50:15.010770 0:time out, lastReceivedTime:0,req:&{Term:20 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:15.010827 0:send vote to 1
+16:50:15.010897 0:send vote to 2
+16:50:15.011115 1:receive requestVote:&{Term:20 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:19,commitIndex:2
+16:50:15.011394 0:received vote,&{Term:19 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.230098 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:15.230179 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:15.304706 1:prevote, lastReceivedTime:1681721406195,req:&{Term:20 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:15.304731 1:send vote to 0
+16:50:15.304738 1:send vote to 2
+16:50:15.312476 0:receive requestVote:&{Term:20 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:20,commitIndex:1
+16:50:15.312603 0:time:1681721415312, votefor:-999
+16:50:15.312846 1:received prevote,&{Term:20 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.312911 1:prevote true
+16:50:15.312972 1:time out, lastReceivedTime:1681721406195,req:&{Term:20 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:15.313028 1:send vote to 0
+16:50:15.313087 1:send vote to 2
+16:50:15.313264 0:receive requestVote:&{Term:20 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:20,commitIndex:1
+16:50:15.314228 1:received vote,&{Term:20 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.531659 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:15.531696 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:15.604436 0:prevote, lastReceivedTime:0,req:&{Term:21 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:15.604458 0:send vote to 1
+16:50:15.604467 0:send vote to 2
+16:50:15.611897 1:receive requestVote:&{Term:21 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:20,commitIndex:2
+16:50:15.612024 1:time:9417, votefor:-999
+16:50:15.612251 0:received prevote,&{Term:20 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.612325 0:prevote true
+16:50:15.612385 0:time out, lastReceivedTime:0,req:&{Term:21 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:15.612442 0:send vote to 1
+16:50:15.612501 0:send vote to 2
+16:50:15.612687 1:receive requestVote:&{Term:21 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:20,commitIndex:2
+16:50:15.617873 0:received vote,&{Term:20 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.832058 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:15.832098 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:15.875351 1:prevote, lastReceivedTime:1681721406195,req:&{Term:21 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}
+16:50:15.875382 1:send vote to 0
+16:50:15.875389 1:send vote to 2
+16:50:15.878245 0:receive requestVote:&{Term:21 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:0}, currentTerm:21,commitIndex:1
+16:50:15.878258 0:time:1681721415878, votefor:-999
+16:50:15.878421 1:received prevote,&{Term:21 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:15.878480 1:prevote true
+16:50:15.878540 1:time out, lastReceivedTime:1681721406195,req:&{Term:21 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}
+16:50:15.878596 1:send vote to 0
+16:50:15.878654 1:send vote to 2
+16:50:15.880338 0:receive requestVote:&{Term:21 CandidateId:1 LastCommitIndex:2 LastCommitTerm:3 Type:1}, currentTerm:21,commitIndex:1
+16:50:15.880528 1:received vote,&{Term:21 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+16:50:16.133836 2:send heartbeat to 0,info:&{Term:3 LeaderId:2 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:2 Status:0 SelfId:0}
+16:50:16.133890 2:send heartbeat to 1,info:&{Term:3 LeaderId:2 PrevLogIndex:2 PrevLogTerm:3 Entries:[] LeaderCommit:2 Status:0 SelfId:1}
+16:50:16.186250 0:prevote, lastReceivedTime:0,req:&{Term:22 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}
+16:50:16.186279 0:send vote to 1
+16:50:16.186286 0:send vote to 2
+16:50:16.193790 1:receive requestVote:&{Term:22 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:0}, currentTerm:21,commitIndex:2
+16:50:16.193871 1:time:9998, votefor:-999
+16:50:16.194118 0:received prevote,&{Term:21 VoteGranted:true SelfId:1 LastCommitIndex:0 LastCommitTerm:0}
+16:50:16.194183 0:prevote true
+16:50:16.194244 0:time out, lastReceivedTime:0,req:&{Term:22 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}
+16:50:16.194300 0:send vote to 1
+16:50:16.194362 0:send vote to 2
+16:50:16.194574 1:receive requestVote:&{Term:22 CandidateId:0 LastCommitIndex:1 LastCommitTerm:1 Type:1}, currentTerm:21,commitIndex:2
+16:50:16.194876 0:received vote,&{Term:21 VoteGranted:false SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+--- FAIL: TestRejoin2B (12.43s)
+    config.go:615: one(104) failed to reach agreement2
+FAIL
+exit status 1
+FAIL	6.824/raft	12.433s
