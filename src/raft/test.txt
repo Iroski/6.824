@@ -1,0 +1,254 @@
+23:50:52.506636 0:i was born
+23:50:52.506874 1:i was born
+23:50:52.506925 2:i was born
+Test (2B): RPC counts aren't too high ...
+23:50:52.953737 1:prevote, lastReceivedTime:0,req:&{Term:1 CandidateId:1 LastCommitIndex:0 LastCommitTerm:0 Type:0}
+23:50:52.953762 1:send vote to 0
+23:50:52.953789 1:send vote to 2
+23:50:52.962489 0:receive requestVote:&{Term:1 CandidateId:1 LastCommitIndex:0 LastCommitTerm:0 Type:0}, currentTerm:0,commitIndex:0
+23:50:52.962512 0:time:1681746652962, votefor:-999
+23:50:52.962616 2:receive requestVote:&{Term:1 CandidateId:1 LastCommitIndex:0 LastCommitTerm:0 Type:0}, currentTerm:0,commitIndex:0
+23:50:52.962690 2:time:1681746652962, votefor:-999
+23:50:52.962637 1:received prevote,&{Term:0 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+23:50:52.962842 1:prevote true
+23:50:52.962852 1:time out, lastReceivedTime:0,req:&{Term:1 CandidateId:1 LastCommitIndex:0 LastCommitTerm:0 Type:1}
+23:50:52.962856 1:send vote to 0
+23:50:52.962872 1:send vote to 2
+23:50:52.963027 0:receive requestVote:&{Term:1 CandidateId:1 LastCommitIndex:0 LastCommitTerm:0 Type:1}, currentTerm:0,commitIndex:0
+23:50:52.963038 0:vote for 1,time:0
+23:50:52.963143 1:received vote,&{Term:1 VoteGranted:true SelfId:0 LastCommitIndex:0 LastCommitTerm:0}
+23:50:52.963266 2:receive requestVote:&{Term:1 CandidateId:1 LastCommitIndex:0 LastCommitTerm:0 Type:1}, currentTerm:0,commitIndex:0
+23:50:52.963276 2:vote for 1,time:0
+23:50:52.963360 1:received vote,&{Term:1 VoteGranted:true SelfId:2 LastCommitIndex:0 LastCommitTerm:0}
+23:50:52.963370 1:become a leader
+23:50:52.963394 1:lastApplied:0,commitIdx:0
+23:50:52.963468 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:0}
+23:50:52.963490 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2}
+23:50:52.969303 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:0},current term:1
+23:50:52.969336 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2},current term:1
+23:50:52.969590 1:resp1:&{1 true 2 0 0 2 0 0}
+23:50:52.969662 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:53.108554 1:lastApplied:0,commitIdx:0
+23:50:53.108606 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:0}
+23:50:53.108621 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2}
+23:50:53.108974 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:0},current term:1
+23:50:53.109073 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:53.109314 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2},current term:1
+23:50:53.109404 1:resp1:&{1 true 2 0 0 2 0 0}
+23:50:53.410042 1:lastApplied:0,commitIdx:0
+23:50:53.410085 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:0}
+23:50:53.410105 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2}
+23:50:53.410427 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:0},current term:1
+23:50:53.410539 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:53.410696 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[] LeaderCommit:0 Status:0 SelfId:2},current term:1
+23:50:53.410795 1:resp1:&{1 true 2 0 0 2 0 0}
+2023/04/17 23:50:53 Start count
+23:50:53.559057 1:begin to send command:{Command:1 Term:1}
+23:50:53.559067 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1}]
+23:50:53.559082 1:begin to send command:{Command:948003838 Term:1}
+23:50:53.559102 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1}]
+23:50:53.559108 1:begin to send command:{Command:2142801456 Term:1}
+23:50:53.559115 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1}]
+23:50:53.559133 1:begin to send command:{Command:1151606598 Term:1}
+23:50:53.559146 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1}]
+23:50:53.559152 1:begin to send command:{Command:366414676 Term:1}
+23:50:53.559164 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1}]
+23:50:53.559174 1:begin to send command:{Command:1532076986 Term:1}
+23:50:53.559186 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1}]
+23:50:53.559194 1:begin to send command:{Command:40962793 Term:1}
+23:50:53.559208 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1}]
+23:50:53.559214 1:begin to send command:{Command:206785248 Term:1}
+23:50:53.559236 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1}]
+23:50:53.559250 1:begin to send command:{Command:36299186 Term:1}
+23:50:53.559269 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1}]
+23:50:53.559275 1:begin to send command:{Command:336881849 Term:1}
+23:50:53.559288 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1}]
+23:50:53.559293 1:begin to send command:{Command:1949152226 Term:1}
+23:50:53.559307 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1}]
+23:50:53.559313 1:begin to send command:{Command:96425499 Term:1}
+23:50:53.559330 1:logs:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}]
+23:50:53.559345 1:start to append:96425499,curCommit:0,lastApplied:12
+23:50:53.559364 1:lastApplied:12,commitIdx:0
+23:50:53.559404 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}] LeaderCommit:0 Status:1 SelfId:0}
+23:50:53.559423 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}] LeaderCommit:0 Status:1 SelfId:2}
+23:50:53.559809 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}] LeaderCommit:0 Status:1 SelfId:0},current term:1
+23:50:53.559836 0:prevlogidx:0 lastApplied:0 prevlogTerm:0 lastTerm:0 ldcommit:0 commitidx:0
+23:50:53.559869 0:success append entry for req:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}] LeaderCommit:0 Status:1 SelfId:0}, self entries:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}]
+23:50:53.559972 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:53.560228 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}] LeaderCommit:0 Status:1 SelfId:2},current term:1
+23:50:53.560237 2:prevlogidx:0 lastApplied:0 prevlogTerm:0 lastTerm:0 ldcommit:0 commitidx:0
+23:50:53.560285 2:success append entry for req:&{Term:1 LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[{Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}] LeaderCommit:0 Status:1 SelfId:2}, self entries:[{Command:<nil> Term:0} {Command:1 Term:1} {Command:948003838 Term:1} {Command:2142801456 Term:1} {Command:1151606598 Term:1} {Command:366414676 Term:1} {Command:1532076986 Term:1} {Command:40962793 Term:1} {Command:206785248 Term:1} {Command:36299186 Term:1} {Command:336881849 Term:1} {Command:1949152226 Term:1} {Command:96425499 Term:1}]
+23:50:53.560397 1:resp1:&{1 true 2 0 0 2 0 0}
+23:50:53.660019 1:commit msg for start:1,end:12,commitIndex:0
+23:50:53.660058 1:commit msg for command:{CommandValid:true Command:1 CommandIndex:1 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:1,to:12
+23:50:53.660072 1:commit msg for command:{CommandValid:true Command:948003838 CommandIndex:2 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:2,to:12
+23:50:53.660080 1:commit msg for command:{CommandValid:true Command:2142801456 CommandIndex:3 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:3,to:12
+23:50:53.660088 1:commit msg for command:{CommandValid:true Command:1151606598 CommandIndex:4 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:4,to:12
+23:50:53.660095 1:commit msg for command:{CommandValid:true Command:366414676 CommandIndex:5 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:5,to:12
+23:50:53.660103 1:commit msg for command:{CommandValid:true Command:1532076986 CommandIndex:6 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:6,to:12
+23:50:53.660110 1:commit msg for command:{CommandValid:true Command:40962793 CommandIndex:7 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:7,to:12
+23:50:53.660117 1:commit msg for command:{CommandValid:true Command:206785248 CommandIndex:8 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:8,to:12
+23:50:53.660131 1:commit msg for command:{CommandValid:true Command:36299186 CommandIndex:9 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:9,to:12
+23:50:53.660157 1:commit msg for command:{CommandValid:true Command:336881849 CommandIndex:10 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:10,to:12
+23:50:53.660164 1:commit msg for command:{CommandValid:true Command:1949152226 CommandIndex:11 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:11,to:12
+23:50:53.660172 1:commit msg for command:{CommandValid:true Command:96425499 CommandIndex:12 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:12,to:12
+23:50:53.660178 1:lastApplied:12,commitIdx:12
+23:50:53.660190 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:2 SelfId:0}
+23:50:53.660200 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:2 SelfId:2}
+23:50:53.660242 1:start to append:1532076986,curCommit:0,lastApplied:6
+23:50:53.660257 1:lastApplied:12,commitIdx:12
+23:50:53.660261 1:append false
+23:50:53.660267 1:start to append:1,curCommit:0,lastApplied:1
+23:50:53.660277 1:lastApplied:12,commitIdx:12
+23:50:53.660281 1:append false
+23:50:53.660286 1:start to append:948003838,curCommit:0,lastApplied:2
+23:50:53.660295 1:lastApplied:12,commitIdx:12
+23:50:53.660299 1:append false
+23:50:53.660304 1:start to append:2142801456,curCommit:0,lastApplied:3
+23:50:53.660313 1:lastApplied:12,commitIdx:12
+23:50:53.660317 1:append false
+23:50:53.660322 1:start to append:1151606598,curCommit:0,lastApplied:4
+23:50:53.660331 1:lastApplied:12,commitIdx:12
+23:50:53.660334 1:append false
+23:50:53.660340 1:start to append:366414676,curCommit:0,lastApplied:5
+23:50:53.660348 1:lastApplied:12,commitIdx:12
+23:50:53.660352 1:append false
+23:50:53.660357 1:start to append:36299186,curCommit:0,lastApplied:9
+23:50:53.660366 1:lastApplied:12,commitIdx:12
+23:50:53.660369 1:append false
+23:50:53.660375 1:start to append:40962793,curCommit:0,lastApplied:7
+23:50:53.660383 1:lastApplied:12,commitIdx:12
+23:50:53.660387 1:append false
+23:50:53.660392 1:start to append:206785248,curCommit:0,lastApplied:8
+23:50:53.660400 1:lastApplied:12,commitIdx:12
+23:50:53.660403 1:append false
+23:50:53.660408 1:start to append:1949152226,curCommit:0,lastApplied:11
+23:50:53.660419 1:lastApplied:12,commitIdx:12
+23:50:53.660422 1:append false
+23:50:53.660427 1:start to append:336881849,curCommit:0,lastApplied:10
+23:50:53.660435 1:lastApplied:12,commitIdx:12
+23:50:53.660439 1:append false
+2023/04/17 23:50:53 server:1,index:2,command:948003838,count:1
+23:50:53.660657 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:2 SelfId:0},current term:1
+23:50:53.660673 0:prevlogidx:12 lastApplied:12 prevlogTerm:1 lastTerm:1 ldcommit:12 commitidx:0
+23:50:53.660678 0:self commit index:0,leader commit:12
+23:50:53.660681 0:commit msg for start:1,end:12,commitIndex:0
+23:50:53.660689 0:commit msg for command:{CommandValid:true Command:1 CommandIndex:1 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:1,to:12
+23:50:53.660699 0:commit msg for command:{CommandValid:true Command:948003838 CommandIndex:2 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:2,to:12
+23:50:53.660705 0:commit msg for command:{CommandValid:true Command:2142801456 CommandIndex:3 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:3,to:12
+23:50:53.660713 0:commit msg for command:{CommandValid:true Command:1151606598 CommandIndex:4 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:4,to:12
+23:50:53.660719 0:commit msg for command:{CommandValid:true Command:366414676 CommandIndex:5 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:5,to:12
+23:50:53.660726 0:commit msg for command:{CommandValid:true Command:1532076986 CommandIndex:6 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:6,to:12
+23:50:53.660739 0:commit msg for command:{CommandValid:true Command:40962793 CommandIndex:7 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:7,to:12
+23:50:53.660746 0:commit msg for command:{CommandValid:true Command:206785248 CommandIndex:8 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:8,to:12
+23:50:53.660753 0:commit msg for command:{CommandValid:true Command:36299186 CommandIndex:9 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:9,to:12
+23:50:53.660771 0:commit msg for command:{CommandValid:true Command:336881849 CommandIndex:10 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:10,to:12
+23:50:53.660781 0:commit msg for command:{CommandValid:true Command:1949152226 CommandIndex:11 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:11,to:12
+23:50:53.660789 0:commit msg for command:{CommandValid:true Command:96425499 CommandIndex:12 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:12,to:12
+23:50:53.661004 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:2 SelfId:2},current term:1
+23:50:53.661063 2:prevlogidx:12 lastApplied:12 prevlogTerm:1 lastTerm:1 ldcommit:12 commitidx:0
+23:50:53.661070 2:self commit index:0,leader commit:12
+23:50:53.661074 2:commit msg for start:1,end:12,commitIndex:0
+23:50:53.661106 2:commit msg for command:{CommandValid:true Command:1 CommandIndex:1 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:1,to:12
+23:50:53.661118 2:commit msg for command:{CommandValid:true Command:948003838 CommandIndex:2 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:2,to:12
+23:50:53.661125 2:commit msg for command:{CommandValid:true Command:2142801456 CommandIndex:3 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:3,to:12
+23:50:53.661133 2:commit msg for command:{CommandValid:true Command:1151606598 CommandIndex:4 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:4,to:12
+23:50:53.661140 2:commit msg for command:{CommandValid:true Command:366414676 CommandIndex:5 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:5,to:12
+23:50:53.661148 2:commit msg for command:{CommandValid:true Command:1532076986 CommandIndex:6 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:6,to:12
+23:50:53.661154 2:commit msg for command:{CommandValid:true Command:40962793 CommandIndex:7 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:7,to:12
+23:50:53.661161 2:commit msg for command:{CommandValid:true Command:206785248 CommandIndex:8 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:8,to:12
+23:50:53.661168 2:commit msg for command:{CommandValid:true Command:36299186 CommandIndex:9 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:9,to:12
+23:50:53.661188 2:commit msg for command:{CommandValid:true Command:336881849 CommandIndex:10 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:10,to:12
+23:50:53.661195 2:commit msg for command:{CommandValid:true Command:1949152226 CommandIndex:11 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:11,to:12
+23:50:53.661203 2:commit msg for command:{CommandValid:true Command:96425499 CommandIndex:12 SnapshotValid:false Snapshot:[] SnapshotTerm:0 SnapshotIndex:0},i:12,to:12
+2023/04/17 23:50:53 server:0,index:2,command:948003838,count:1
+2023/04/17 23:50:53 server:1,index:2,command:948003838,count:2
+2023/04/17 23:50:53 server:2,index:2,command:948003838,count:3
+2023/04/17 23:50:53 server:0,index:2,command:948003838,count:1
+2023/04/17 23:50:53 server:1,index:2,command:948003838,count:2
+2023/04/17 23:50:53 server:2,index:2,command:948003838,count:3
+2023/04/17 23:50:53 server:0,index:3,command:2142801456,count:1
+2023/04/17 23:50:53 server:1,index:3,command:2142801456,count:2
+2023/04/17 23:50:53 server:2,index:3,command:2142801456,count:3
+2023/04/17 23:50:53 server:0,index:3,command:2142801456,count:1
+2023/04/17 23:50:53 server:1,index:3,command:2142801456,count:2
+2023/04/17 23:50:53 server:2,index:3,command:2142801456,count:3
+2023/04/17 23:50:53 server:0,index:4,command:1151606598,count:1
+2023/04/17 23:50:53 server:1,index:4,command:1151606598,count:2
+2023/04/17 23:50:53 server:2,index:4,command:1151606598,count:3
+2023/04/17 23:50:53 server:0,index:4,command:1151606598,count:1
+2023/04/17 23:50:53 server:1,index:4,command:1151606598,count:2
+2023/04/17 23:50:53 server:2,index:4,command:1151606598,count:3
+2023/04/17 23:50:53 server:0,index:5,command:366414676,count:1
+2023/04/17 23:50:53 server:1,index:5,command:366414676,count:2
+2023/04/17 23:50:53 server:2,index:5,command:366414676,count:3
+2023/04/17 23:50:53 server:0,index:5,command:366414676,count:1
+2023/04/17 23:50:53 server:1,index:5,command:366414676,count:2
+2023/04/17 23:50:53 server:2,index:5,command:366414676,count:3
+2023/04/17 23:50:53 server:0,index:6,command:1532076986,count:1
+2023/04/17 23:50:53 server:1,index:6,command:1532076986,count:2
+2023/04/17 23:50:53 server:2,index:6,command:1532076986,count:3
+2023/04/17 23:50:53 server:0,index:6,command:1532076986,count:1
+2023/04/17 23:50:53 server:1,index:6,command:1532076986,count:2
+2023/04/17 23:50:53 server:2,index:6,command:1532076986,count:3
+2023/04/17 23:50:53 server:0,index:7,command:40962793,count:1
+2023/04/17 23:50:53 server:1,index:7,command:40962793,count:2
+2023/04/17 23:50:53 server:2,index:7,command:40962793,count:3
+2023/04/17 23:50:53 server:0,index:7,command:40962793,count:1
+2023/04/17 23:50:53 server:1,index:7,command:40962793,count:2
+2023/04/17 23:50:53 server:2,index:7,command:40962793,count:3
+2023/04/17 23:50:53 server:0,index:8,command:206785248,count:1
+2023/04/17 23:50:53 server:1,index:8,command:206785248,count:2
+2023/04/17 23:50:53 server:2,index:8,command:206785248,count:3
+2023/04/17 23:50:53 server:0,index:8,command:206785248,count:1
+2023/04/17 23:50:53 server:1,index:8,command:206785248,count:2
+2023/04/17 23:50:53 server:2,index:8,command:206785248,count:3
+2023/04/17 23:50:53 server:0,index:9,command:36299186,count:1
+2023/04/17 23:50:53 server:1,index:9,command:36299186,count:2
+2023/04/17 23:50:53 server:2,index:9,command:36299186,count:3
+2023/04/17 23:50:53 server:0,index:9,command:36299186,count:1
+2023/04/17 23:50:53 server:1,index:9,command:36299186,count:2
+2023/04/17 23:50:53 server:2,index:9,command:36299186,count:3
+2023/04/17 23:50:53 server:0,index:10,command:336881849,count:1
+2023/04/17 23:50:53 server:1,index:10,command:336881849,count:2
+2023/04/17 23:50:53 server:2,index:10,command:336881849,count:3
+2023/04/17 23:50:53 server:0,index:10,command:336881849,count:1
+2023/04/17 23:50:53 server:1,index:10,command:336881849,count:2
+2023/04/17 23:50:53 server:2,index:10,command:336881849,count:3
+2023/04/17 23:50:53 server:0,index:11,command:1949152226,count:1
+2023/04/17 23:50:53 server:1,index:11,command:1949152226,count:2
+2023/04/17 23:50:53 server:2,index:11,command:1949152226,count:3
+2023/04/17 23:50:53 server:0,index:11,command:1949152226,count:1
+2023/04/17 23:50:53 server:1,index:11,command:1949152226,count:2
+2023/04/17 23:50:53 server:2,index:11,command:1949152226,count:3
+23:50:53.711299 1:lastApplied:12,commitIdx:12
+23:50:53.711334 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0}
+23:50:53.711356 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2}
+23:50:53.714294 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2},current term:1
+23:50:53.714430 1:resp1:&{1 true 2 0 0 2 0 0}
+23:50:53.714682 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0},current term:1
+23:50:53.714864 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:54.012080 1:lastApplied:12,commitIdx:12
+23:50:54.012119 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0}
+23:50:54.012136 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2}
+23:50:54.012463 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0},current term:1
+23:50:54.012654 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:54.012938 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2},current term:1
+23:50:54.013112 1:resp1:&{1 true 2 0 0 2 0 0}
+23:50:54.313056 1:lastApplied:12,commitIdx:12
+23:50:54.313099 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0}
+23:50:54.313116 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2}
+23:50:54.313438 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0},current term:1
+23:50:54.313545 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:54.313767 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2},current term:1
+23:50:54.313860 1:resp1:&{1 true 2 0 0 2 0 0}
+23:50:54.614947 1:lastApplied:12,commitIdx:12
+23:50:54.614994 1:send heartbeat to 0,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0}
+23:50:54.615010 1:send heartbeat to 2,info:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2}
+23:50:54.615350 0:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:0},current term:1
+23:50:54.615452 1:resp1:&{1 true 0 0 0 0 0 0}
+23:50:54.615675 2:receive append entries:&{Term:1 LeaderId:1 PrevLogIndex:12 PrevLogTerm:1 Entries:[] LeaderCommit:12 Status:0 SelfId:2},current term:1
+23:50:54.615762 1:resp1:&{1 true 2 0 0 2 0 0}
+  ... Passed --   2.2  3   22    8302   12
+PASS
+ok  	6.824/raft	2.178s
