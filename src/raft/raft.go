@@ -19,7 +19,6 @@ package raft
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -291,11 +290,11 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.logger.Printf("begin to send command:%+v", entry)
 	rf.log = append(rf.log, entry)
 	rf.logger.Printf("logs:%+v", rf.log)
-	curCommitIndex := rf.commitIndex
-	lastApplied := rf.lastAppliedIndex
 	rf.mu.Unlock()
 	go func() {
 		rf.sendmu.Lock()
+		curCommitIndex := rf.commitIndex
+		lastApplied := rf.lastAppliedIndex
 		rf.logger.Printf("start to append:%v,curCommit:%d,lastApplied:%d", command, curCommitIndex, lastApplied)
 		if result := rf.SendAppendEntries(Append); result {
 			rf.mu.Lock()
@@ -371,7 +370,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// Your initialization code here (2A, 2B, 2C).
 	rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
-	rf.logger.SetOutput(ioutil.Discard)
+	// rf.logger.SetOutput(ioutil.Discard)
 	rf.logger.Printf("i was born")
 	//rf.commitIndex = -1
 	//rf.lastAppliedIndex = -1
