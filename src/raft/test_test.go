@@ -604,7 +604,7 @@ loop:
 
 		leader = cfg.checkOneLeader()
 		total1 = rpcs()
-
+		log.Println("Start count")
 		iters := 10
 		starti, term, ok := cfg.rafts[leader].Start(1)
 		if !ok {
@@ -656,7 +656,7 @@ loop:
 		}
 
 		if total2-total1 > (iters+1+3)*3 {
-			t.Fatalf("too many RPCs (%v) for %v entries\n", total2-total1, iters)
+			t.Fatalf("too many RPCs (%v) for %v entries,%d\n", total2-total1, iters, (iters+1+3)*3)
 		}
 
 		success = true

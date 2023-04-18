@@ -19,6 +19,7 @@ package raft
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -84,6 +85,7 @@ type Raft struct {
 	dead      int32               // set by Kill()
 	logger    *log.Logger
 	applyChan chan ApplyMsg
+	sendmu    sync.Mutex
 
 	currentTerm     int
 	voteFor         int
@@ -201,7 +203,7 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 		resp.VoteGranted = false
 		resp.SelfId = rf.me
 		resp.Term = rf.currentTerm
-		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && (rf.currentTerm < req.Term || (rf.currentTerm == req.Term && rf.commitIndex < req.LastCommitIndex)) {
+		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && rf.commitIndex <= req.LastCommitIndex {
 			resp.VoteGranted = true
 			rf.voteFor = req.CandidateId
 			rf.lastVoteForTime = time.Now().UnixMilli()
@@ -270,13 +272,14 @@ func (rf *Raft) RPCSendRequestVote(server int, args *RequestVoteArgs, reply *Req
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.mu.Lock()
 	isLeader := rf.status == Leader
-	rf.mu.Unlock()
+	// rf.mu.Unlock()
 
 	if !isLeader {
+		rf.mu.Unlock()
 		return -1, -1, false
 	}
 
-	rf.mu.Lock()
+	// rf.mu.Lock()
 	rf.lastAppliedIndex++
 	rf.lastAppliedTerm = rf.currentTerm
 	index := rf.lastAppliedIndex
@@ -288,17 +291,21 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	rf.logger.Printf("begin to send command:%+v", entry)
 	rf.log = append(rf.log, entry)
 	rf.logger.Printf("logs:%+v", rf.log)
-	//entries := rf.log[rf.commitIndex+1:] //commitIndex为1时，实际commit的是log[0]，所以取值不+1
+	curCommitIndex := rf.commitIndex
+	lastApplied := rf.lastAppliedIndex
 	rf.mu.Unlock()
 	go func() {
+		rf.sendmu.Lock()
+		rf.logger.Printf("start to append:%v,curCommit:%d,lastApplied:%d", command, curCommitIndex, lastApplied)
 		if result := rf.SendAppendEntries(Append); result {
 			rf.mu.Lock()
-			rf.CommitLog(rf.commitIndex, rf.lastAppliedIndex)
-			rf.commitIndex = rf.lastAppliedIndex
+			rf.CommitLog(curCommitIndex, lastApplied)
+			rf.commitIndex = lastApplied
 			rf.commitTerm = rf.currentTerm
 			rf.mu.Unlock()
 			rf.SendAppendEntries(Commit)
 		}
+		rf.sendmu.Unlock()
 	}()
 
 	return index, term, isLeader
@@ -364,7 +371,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// Your initialization code here (2A, 2B, 2C).
 	rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
-	// rf.logger.SetOutput(ioutil.Discard)
+	rf.logger.SetOutput(ioutil.Discard)
 	rf.logger.Printf("i was born")
 	//rf.commitIndex = -1
 	//rf.lastAppliedIndex = -1
@@ -585,8 +592,11 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 
 // CommitLog 需要确保外围被锁
 func (rf *Raft) CommitLog(from, to int) {
-	rf.logger.Printf("commit msg for start:%d,end:%d", from+1, to)
+	rf.logger.Printf("commit msg for start:%d,end:%d,commitIndex:%d", from+1, to, rf.commitIndex)
 	for i := from + 1; i <= to; i++ {
+		if i <= rf.commitIndex {
+			continue
+		}
 		rf.commitIndex++
 		msg := ApplyMsg{
 			CommandValid: true,
@@ -616,7 +626,9 @@ func (rf *Raft) LeaderTicker() {
 func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	if rf.status != Leader {
+	rf.logger.Printf("lastApplied:%d,commitIdx:%d", rf.lastAppliedIndex, rf.commitIndex)
+	if rf.status != Leader || (status == Append && rf.lastAppliedIndex == rf.commitIndex) {
+		rf.logger.Printf("append false")
 		return false
 	}
 	respChan := make(chan *AppendEntriesResp, len(rf.peers))
