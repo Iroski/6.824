@@ -473,6 +473,10 @@ func (rf *Raft) Election(periodicalTime int64) {
 		}()
 	}
 	curTime := time.Now().UnixMilli()
+	for i := 0; i < len(rf.peers); i++ {
+		rf.matchIndex[i] = rf.commitIndex
+		rf.nextIndex[i] = rf.commitIndex + 1
+	}
 	for voteCount < len(rf.peers) && curTime+50 >= time.Now().UnixMilli() && rf.status == Candidate {
 		select {
 		case resp := <-respChan:
@@ -573,7 +577,16 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 				rf.logger.Printf("receive command, but false,req:%+v,self applied term:%d,self applied index:%d,self applied commit index:%d", req, rf.lastAppliedTerm, rf.lastAppliedIndex, rf.commitIndex)
 			} else { //由于follower个人原因导致log缺失，需要补全
 				resp.Success = false
-				resp.RequiredIndex = rf.commitIndex
+				tmpIndex := min(rf.lastAppliedIndex, req.PrevLogIndex)
+				tmpTerm := rf.log[tmpIndex].Term
+				for ; tmpIndex >= 0; tmpIndex-- {
+					if rf.log[tmpIndex].Term != tmpTerm {
+						resp.RequiredIndex = tmpIndex
+						resp.RequiredTerm = rf.log[tmpIndex].Term
+						break
+					}
+				}
+				rf.logger.Printf("cur commitIdx:%d requeiredIdx:%d term%d", rf.commitIndex, resp.RequiredIndex, resp.RequiredTerm)
 			}
 		}
 	case Commit:
@@ -676,7 +689,7 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 				if resp.Term > rf.currentTerm {
 					rf.currentTerm = resp.Term
 					// if resp.LastCommitIndex >= rf.commitIndex && resp.LastCommitTerm >= rf.commitTerm {
-					// 	rf.logger.Printf("become a follower with leader:%d", resp.Responder)
+					rf.logger.Printf("become a candidate with leader:%d", resp.Responder)
 					// 	rf.status = Follower
 					// } else {
 					// 	rf.logger.Printf("become a candidate by leader:%d", resp.Responder)
@@ -685,6 +698,7 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 					rf.status = Follower
 				} else if status == Append {
 					rf.matchIndex[resp.SelfId] = resp.RequiredIndex
+					rf.SendOne(status, resp.SelfId, respChan)
 				}
 			}
 		default:
