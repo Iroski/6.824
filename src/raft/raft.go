@@ -196,13 +196,16 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 	rf.logger.Printf("receive requestVote:%+v, currentTerm:%d,commitIndex:%d", req, rf.currentTerm, rf.commitIndex)
 	resp.Term = rf.currentTerm
 	candidateTerm := req.Term
+	resp.SelfId = rf.me
+	resp.LastCommitIndex = rf.lastAppliedIndex
+	resp.LastCommitTerm = rf.log[rf.lastAppliedIndex].Term
+	resp.VoteGranted = false
 
 	if req.Type == PreVote {
 		rf.logger.Printf("time:%d, votefor:%d", time.Now().UnixMilli()-rf.lastReceivedTime, rf.voteFor)
-		resp.VoteGranted = false
-		resp.SelfId = rf.me
+
 		resp.Term = rf.currentTerm
-		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && rf.commitIndex <= req.LastCommitIndex {
+		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && (rf.log[rf.lastAppliedIndex].Term < req.LastCommitTerm || (rf.log[rf.lastAppliedIndex].Term == req.LastCommitTerm && rf.lastAppliedIndex <= req.LastCommitIndex)) {
 			resp.VoteGranted = true
 			rf.voteFor = req.CandidateId
 			rf.lastVoteForTime = time.Now().UnixMilli()
@@ -210,15 +213,12 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 		return
 	}
 
-	if rf.voteFor == req.CandidateId && candidateTerm > rf.currentTerm && req.LastCommitIndex >= rf.commitIndex && req.LastCommitTerm >= rf.lastAppliedTerm {
+	if rf.voteFor == req.CandidateId && candidateTerm > rf.currentTerm && (rf.log[rf.lastAppliedIndex].Term < req.LastCommitTerm || (rf.log[rf.lastAppliedIndex].Term == req.LastCommitTerm && rf.lastAppliedIndex <= req.LastCommitIndex)) {
 		rf.voteFor = req.CandidateId
 		rf.status = Follower
 		rf.currentTerm = candidateTerm
 		resp.Term = candidateTerm
-		resp.LastCommitIndex = rf.commitIndex
-		resp.LastCommitTerm = rf.commitTerm
 		resp.VoteGranted = true
-		resp.SelfId = rf.me
 		rf.lastVoteForTime = time.Now().UnixMilli()
 		rf.logger.Printf("vote for %d,time:%d", req.CandidateId, rf.lastReceivedTime)
 	}
@@ -399,8 +399,8 @@ func (rf *Raft) PreVote(periodicalTime int64) bool {
 	req := &RequestVoteArgs{
 		Term:            rf.currentTerm + 1,
 		CandidateId:     rf.me,
-		LastCommitIndex: rf.commitIndex,
-		LastCommitTerm:  rf.commitTerm,
+		LastCommitIndex: rf.lastAppliedIndex,
+		LastCommitTerm:  rf.log[rf.lastAppliedIndex].Term,
 		Type:            PreVote,
 	}
 	rf.mu.Unlock()
@@ -453,8 +453,8 @@ func (rf *Raft) Election(periodicalTime int64) {
 	req := &RequestVoteArgs{
 		Term:            rf.currentTerm,
 		CandidateId:     rf.me,
-		LastCommitIndex: rf.commitIndex,
-		LastCommitTerm:  rf.commitTerm,
+		LastCommitIndex: rf.lastAppliedIndex,
+		LastCommitTerm:  rf.log[rf.lastAppliedIndex].Term,
 		Type:            TrueVote,
 	}
 	rf.mu.Unlock()
@@ -473,6 +473,10 @@ func (rf *Raft) Election(periodicalTime int64) {
 		}()
 	}
 	curTime := time.Now().UnixMilli()
+	for i := 0; i < len(rf.peers); i++ {
+		rf.matchIndex[i] = rf.commitIndex
+		rf.nextIndex[i] = rf.commitIndex + 1
+	}
 	for voteCount < len(rf.peers) && curTime+50 >= time.Now().UnixMilli() && rf.status == Candidate {
 		select {
 		case resp := <-respChan:
@@ -480,8 +484,8 @@ func (rf *Raft) Election(periodicalTime int64) {
 			if resp.VoteGranted {
 				voteCount++
 			}
-			rf.matchIndex[resp.SelfId] = resp.LastCommitIndex
-			rf.nextIndex[resp.SelfId] = rf.matchIndex[resp.SelfId] + 1
+			rf.matchIndex[resp.SelfId] = min(resp.LastCommitIndex, rf.commitIndex)
+			rf.nextIndex[resp.SelfId] = min(rf.matchIndex[resp.SelfId]+1, rf.commitIndex+1)
 			curTime = time.Now().UnixMilli()
 		default:
 		}
@@ -568,12 +572,21 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 			rf.logger.Printf("success append entry for req:%+v, self entries:%+v", req, rf.log)
 		} else {
 			//自己的内容更新
-			if req.PrevLogTerm != rf.log[req.PrevLogIndex].Term || req.PrevLogIndex > rf.lastAppliedIndex || req.LeaderCommit < rf.commitIndex { //leader超时后重连，在未变成follower之前有可能会发消息
+			if req.LeaderCommit < rf.commitIndex { //leader超时后重连，在未变成follower之前有可能会发消息
 				resp.Success = false
 				rf.logger.Printf("receive command, but false,req:%+v,self applied term:%d,self applied index:%d,self applied commit index:%d", req, rf.lastAppliedTerm, rf.lastAppliedIndex, rf.commitIndex)
 			} else { //由于follower个人原因导致log缺失，需要补全
 				resp.Success = false
-				resp.RequiredIndex = rf.lastAppliedIndex + 1
+				tmpIndex := min(rf.lastAppliedIndex, req.PrevLogIndex)
+				tmpTerm := rf.log[tmpIndex].Term
+				for ; tmpIndex >= 0; tmpIndex-- {
+					if rf.log[tmpIndex].Term != tmpTerm {
+						resp.RequiredIndex = tmpIndex
+						resp.RequiredTerm = rf.log[tmpIndex].Term
+						break
+					}
+				}
+				rf.logger.Printf("cur commitIdx:%d requeiredIdx:%d term%d", rf.commitIndex, resp.RequiredIndex, resp.RequiredTerm)
 			}
 		}
 	case Commit:
@@ -622,6 +635,33 @@ func (rf *Raft) LeaderTicker() {
 	}
 }
 
+func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *AppendEntriesResp) {
+	matchIndex := rf.matchIndex[id]
+	var entries = make([]LogEntry, 0)
+	if status != HeartBeat && matchIndex+1 <= rf.nextIndex[id] {
+		entries = rf.log[matchIndex+1:]
+	}
+	a := id
+	req := &AppendEntriesReq{
+		Term:         rf.currentTerm,
+		LeaderId:     rf.me,
+		PrevLogIndex: matchIndex,
+		PrevLogTerm:  rf.log[matchIndex].Term,
+		Entries:      entries,
+		LeaderCommit: rf.commitIndex,
+		Status:       status,
+		SelfId:       a,
+	}
+	if id != rf.me {
+		resp := &AppendEntriesResp{}
+		rf.logger.Printf("send heartbeat to %d,info:%+v", id, req)
+		go func(b int) {
+			rf.RPCSendAppendEntries(b, req, resp)
+			respChan <- resp
+		}(a)
+	}
+}
+
 func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
@@ -632,30 +672,7 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 	}
 	respChan := make(chan *AppendEntriesResp, len(rf.peers))
 	for i := range rf.peers {
-		matchIndex := rf.matchIndex[i]
-		var entries = make([]LogEntry, 0)
-		if status != HeartBeat && matchIndex+1 <= rf.nextIndex[i] {
-			entries = rf.log[matchIndex+1:]
-		}
-		a := i
-		req := &AppendEntriesReq{
-			Term:         rf.currentTerm,
-			LeaderId:     rf.me,
-			PrevLogIndex: matchIndex,
-			PrevLogTerm:  rf.log[matchIndex].Term,
-			Entries:      entries,
-			LeaderCommit: rf.commitIndex,
-			Status:       status,
-			SelfId:       a,
-		}
-		if i != rf.me {
-			resp := &AppendEntriesResp{}
-			rf.logger.Printf("send heartbeat to %d,info:%+v", i, req)
-			go func(b int) {
-				rf.RPCSendAppendEntries(b, req, resp)
-				respChan <- resp
-			}(a)
-		}
+		rf.SendOne(status, i, respChan)
 	}
 	startTime := time.Now().UnixMilli()
 	count := 0
@@ -668,14 +685,20 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 				rf.logger.Printf("resp1:%v\n", resp)
 				successResp = append(successResp, resp)
 			}
-			if !resp.Success && resp.Term > rf.currentTerm {
-				rf.currentTerm = resp.Term
-				if resp.LastCommitIndex >= rf.commitIndex && resp.LastCommitTerm >= rf.commitTerm {
-					rf.logger.Printf("become a follower with leader:%d", resp.Responder)
+			if !resp.Success {
+				if resp.Term > rf.currentTerm {
+					rf.currentTerm = resp.Term
+					// if resp.LastCommitIndex >= rf.commitIndex && resp.LastCommitTerm >= rf.commitTerm {
+					rf.logger.Printf("become a candidate with leader:%d", resp.Responder)
+					// 	rf.status = Follower
+					// } else {
+					// 	rf.logger.Printf("become a candidate by leader:%d", resp.Responder)
+					// 	rf.status = Candidate
+					// }
 					rf.status = Follower
-				} else {
-					rf.logger.Printf("become a candidate by leader:%d", resp.Responder)
-					rf.status = Candidate
+				} else if status == Append {
+					rf.matchIndex[resp.SelfId] = resp.RequiredIndex
+					rf.SendOne(status, resp.SelfId, respChan)
 				}
 			}
 		default:
@@ -710,4 +733,17 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, fixId ...int) bool
 func (rf *Raft) RPCSendAppendEntries(to int, req *AppendEntriesReq, resp *AppendEntriesResp) bool {
 	ok := rf.peers[to].Call("Raft.AppendEntries", req, resp)
 	return ok
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+func max(a, b int) int {
+	if a < b {
+		return b
+	}
+	return a
 }
