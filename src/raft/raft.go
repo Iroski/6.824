@@ -495,10 +495,6 @@ func (rf *Raft) Election(periodicalTime int64) {
 		}()
 	}
 	curTime := time.Now().UnixMilli()
-	// for i := 0; i < len(rf.peers); i++ {
-	// 	rf.matchIndex[i] = rf.commitIndex
-	// 	rf.nextIndex[i] = rf.commitIndex + 1
-	// }
 	for i := 0; i < len(rf.peers); i++ {
 		rf.matchIndex[i] = 0
 		rf.nextIndex[i] = rf.commitIndex + 1
@@ -583,17 +579,13 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 		if req.PrevLogIndex <= rf.lastAppliedIndex && req.PrevLogTerm == rf.log[req.PrevLogIndex].Term { //&& req.LeaderCommit >= rf.commitIndex
 			//if req.PrevLogIndex == rf.lastAppliedIndex+1 ... //todo 这里不知道为啥当初加一了，后续注意
 			rf.log = rf.log[:req.PrevLogIndex+1]
-			rf.lastAppliedIndex = len(rf.log) - 1
+			rf.lastAppliedIndex = req.PrevLogIndex
 			rf.log = append(rf.log, req.Entries...)
 			rf.lastAppliedIndex += len(req.Entries)
 			rf.lastAppliedTerm = rf.currentTerm
 			rf.logger.Printf("success append,cur:%+v", rf.log)
-		} else {
+		} else {			//由于follower个人原因导致log缺失，需要补全
 			resp.Success = false
-			//自己的内容更新
-			// if req.LeaderCommit < rf.commitIndex { //leader超时后重连，在未变成follower之前有可能会发消息
-			// 	rf.logger.Printf("receive command, but false,req:%+v,self applied term:%d,self applied index:%d,self applied commit index:%d", req, rf.lastAppliedTerm, rf.lastAppliedIndex, rf.commitIndex)
-			// } else { //由于follower个人原因导致log缺失，需要补全
 			tmpIndex := min(rf.lastAppliedIndex, req.PrevLogIndex)
 			tmpTerm := rf.log[tmpIndex].Term
 			for ; tmpIndex >= rf.commitIndex; tmpIndex-- {
@@ -604,7 +596,6 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 				}
 			}
 			rf.logger.Printf("cur commitIdx:%d requeiredIdx:%d term%d", rf.commitIndex, resp.RequiredIndex, resp.RequiredTerm)
-			// }
 		}
 	case Commit:
 		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
@@ -615,10 +606,6 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 		rf.CommitLog(rf.commitIndex, req.LeaderCommit)
 		rf.commitTerm = rf.currentTerm
 	default:
-		// if rf.lastReceivedTime+HeartBeatDuration<time.Now().UnixMilli(){
-		// 	resp.RequiredIndex = len(rf.log)-1
-		// 	resp.RequiredTerm = rf.log[len(rf.log)-1].Term
-		// }
 		if req.PrevLogIndex != rf.lastAppliedIndex || req.PrevLogTerm != rf.log[req.PrevLogIndex].Term {
 			resp.Success = false
 			resp.RequiredIndex = len(rf.log) - 1
