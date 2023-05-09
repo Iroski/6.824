@@ -126,6 +126,7 @@ func (rf *Raft) GetState() (int, bool) {
 func (rf *Raft) persist() {
 	// Your code here (2C).
 	rf.persister.SaveRaftState(rf.getPersistData())
+	rf.logger.Printf("finish persist")
 }
 
 func (rf *Raft) getPersistData() []byte {
@@ -146,6 +147,8 @@ func (rf *Raft) getPersistData() []byte {
 
 // restore previously persisted state.
 func (rf *Raft) readPersist(data []byte) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	if data == nil || len(data) < 1 { // bootstrap without any state?
 		return
 	}
@@ -174,11 +177,19 @@ func (rf *Raft) readPersist(data []byte) {
 		rf.currentTerm = currentTerm
 		rf.voteFor = voteFor
 		rf.log = log
-		rf.commitIndex = commitIdx
+		rf.commitIndex = lastSnapShotIndex
 		rf.lastSnapShotIndex = lastSnapShotIndex
 		rf.lastSnapShotTerm = lastSnapShotTerm
 		rf.lastAppliedIndex = lastAppliedIndex
 		rf.lastAppliedTerm = rf.log[rf.GetRealIndex(rf.lastAppliedIndex)].Term
+		rf.logger.Printf("cterm:%d,cmtIdx:%d,lsnapIdx:%d,lAppIdx:%d", currentTerm, commitIdx, lastSnapShotIndex, lastAppliedIndex)
+		// if lastSnapShotTerm != 0 {
+		// 	rf.applyChan <- ApplyMsg{
+		// 		CommandValid: true,
+		// 		Command:      nil,
+		// 		CommandIndex: lastSnapShotIndex,
+		// 	}
+		// }
 	}
 }
 
@@ -198,7 +209,8 @@ type InstallSnapshotResp struct {
 // A service wants to switch to snapshot.  Only do so if Raft hasn't
 // have more recent info since it communicate the snapshot on applyCh.
 func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool {
-
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	lastIndex := rf.lastSnapShotIndex + len(rf.log) - 1
 	if lastIncludedIndex > lastIndex {
 		rf.log = make([]LogEntry, 1)
@@ -214,7 +226,7 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 	rf.lastAppliedIndex, rf.commitIndex = lastIncludedIndex, lastIncludedIndex
 	//保存快照和状态
 	rf.persister.SaveStateAndSnapshot(rf.getPersistData(), snapshot)
-
+	rf.logger.Printf("finish snapshot,lastappIdx:%d,lastSnapIdx:%d,log:%+v", rf.lastAppliedIndex, rf.lastSnapShotIndex, rf.log)
 	return true
 }
 
@@ -259,6 +271,7 @@ func (rf *Raft) InstallSnapshot(req *InstallSnapshotReq, resp *InstallSnapshotRe
 
 	//如果自身快照包含的最后一个日志>=leader快照包含的最后一个日志，就没必要接受了
 	if rf.lastSnapShotIndex >= req.LastIncludedIndex {
+		rf.logger.Printf("useless snapshot:self lastsnap:%d,req.idx:%d", rf.lastSnapShotIndex, req.LastIncludedIndex)
 		return
 	}
 
@@ -269,7 +282,7 @@ func (rf *Raft) InstallSnapshot(req *InstallSnapshotReq, resp *InstallSnapshotRe
 		SnapshotTerm:  req.LastIncludedTerm,
 		SnapshotIndex: req.LastIncludedIndex,
 	}
-
+	rf.logger.Printf("success snapshot:self lastsnap:%d,req.idx:%d", rf.lastSnapShotIndex, req.LastIncludedIndex)
 }
 
 func (rf *Raft) SendInstallSnapshot(server int) {
@@ -297,7 +310,7 @@ func (rf *Raft) SendInstallSnapshot(server int) {
 		select {
 		case resp := <-respChan:
 			rf.mu.Lock()
-			if resp.Term >= rf.currentTerm {
+			if resp.Term > rf.currentTerm {
 				rf.currentTerm = resp.Term
 				rf.logger.Printf("become a snapshot candidate with notifier:%d", server)
 				rf.status = Follower
@@ -448,9 +461,10 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		rf.mu.Lock()
 		curCommitIndex := rf.commitIndex
 		lastApplied := rf.lastAppliedIndex
+		realIndex := rf.GetRealIndex(lastApplied)
 		rf.mu.Unlock()
-		rf.logger.Printf("start to append:%v,curCommit:%d,lastApplied:%d", command, curCommitIndex, lastApplied)
-		if result := rf.SendAppendEntries(Append, rf.GetRealIndex(lastApplied)+1); result {
+		rf.logger.Printf("start to append:%v,curCommit:%d,lastApplied:%d,realLast:%d", command, curCommitIndex, lastApplied, realIndex)
+		if result := rf.SendAppendEntries(Append, lastApplied+1); result {
 			rf.CommitLog(curCommitIndex, lastApplied)
 			rf.mu.Lock()
 			rf.commitIndex = lastApplied
@@ -526,7 +540,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// Your initialization code here (2A, 2B, 2C).
 	rf.logger = log.New(os.Stdout, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
-	// rf.logger.SetOutput(ioutil.Discard)
+	// rf.logger = log.New(ioutil.Discard, fmt.Sprintf("%d:", rf.me), log.Lmsgprefix|log.Lmicroseconds)
 	rf.logger.Printf("i was born")
 	//rf.commitIndex = -1
 	//rf.lastAppliedIndex = -1
@@ -688,7 +702,7 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	rf.mu.Lock()
 	resp.Responder = rf.me
 	// resp.SelfId = req.SelfId
-	rf.logger.Printf("receive append entries:%+v,current term:%d", req, rf.currentTerm)
+	rf.logger.Printf("receive append entries:%+v,current term:%d,cmtIdx:%d,AppIdx:%d", req, rf.currentTerm, rf.commitIndex, rf.lastAppliedIndex)
 	if req.Term < rf.currentTerm {
 		resp.Term = rf.currentTerm
 		resp.Success = false
@@ -707,8 +721,8 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	//不同类型消息变更
 	switch req.Status {
 	case Append:
-		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d realIdx:%d, self entries:%+v", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.log[rf.GetRealIndex(req.PrevLogIndex)].Term, rf.GetRealIndex(req.PrevLogIndex), rf.log)
 		if req.PrevLogIndex <= rf.lastAppliedIndex && req.PrevLogTerm == rf.log[rf.GetRealIndex(req.PrevLogIndex)].Term { //&& req.LeaderCommit >= rf.commitIndex
+			rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d realIdx:%d, self entries:%+v", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.log[rf.GetRealIndex(req.PrevLogIndex)].Term, rf.GetRealIndex(req.PrevLogIndex), rf.log)
 			rf.log = rf.log[:rf.GetRealIndex(req.PrevLogIndex)+1]
 			rf.lastAppliedIndex = req.PrevLogIndex
 			rf.log = append(rf.log, req.Entries...)
@@ -732,6 +746,7 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	case Commit:
 		rf.logger.Printf("prevlogidx:%d lastApplied:%d prevlogTerm:%d lastTerm:%d ldcommit:%d commitidx:%d", req.PrevLogIndex, rf.lastAppliedIndex, req.PrevLogTerm, rf.lastAppliedTerm, req.LeaderCommit, rf.commitIndex)
 		if req.LeaderCommit > rf.lastAppliedIndex { //刚重连就收到了commit的消息
+			rf.mu.Unlock()
 			return
 		}
 		rf.logger.Printf("self commit index:%d,leader commit:%d", rf.commitIndex, req.LeaderCommit)
@@ -741,15 +756,17 @@ func (rf *Raft) AppendEntries(req *AppendEntriesReq, resp *AppendEntriesResp) {
 	default:
 		if req.PrevLogIndex != rf.lastAppliedIndex || req.PrevLogTerm != rf.log[rf.GetRealIndex(req.PrevLogIndex)].Term {
 			resp.Success = false
-			resp.RequiredIndex = len(rf.log) - 1
-			resp.RequiredTerm = rf.log[len(rf.log)-1].Term
+			resp.RequiredIndex = rf.lastAppliedIndex
+			resp.RequiredTerm = rf.log[rf.GetRealIndex(rf.lastAppliedIndex)].Term
 			rf.logger.Printf("heartbeat error, requeireIdx:%d, term:%d", resp.RequiredIndex, resp.RequiredTerm)
 		}
 		rf.mu.Unlock()
 	}
 	rf.mu.Lock()
 	rf.lastReceivedTime = time.Now().UnixMilli()
-	rf.persist()
+	if req.Status != HeartBeat {
+		rf.persist()
+	}
 	rf.mu.Unlock()
 }
 
@@ -809,9 +826,14 @@ func (rf *Raft) GetAppendIndexAndTerm(id int) (prevLogIndex, prevLogTerm int) {
 func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *AppendEntriesResp, stop ...int) {
 	rf.mu.Lock()
 	prevIndex, prevTerm := rf.GetAppendIndexAndTerm(id)
-	var entries = make([]LogEntry, 0)
+	entries := make([]LogEntry, 0)
 	if status == Append && prevIndex+1 <= rf.nextIndex[id] {
-		entries = rf.log[rf.GetRealIndex(prevIndex)+1:]
+		rf.logger.Printf("sendone:prev:%d,realPrev:%d,stop:%d", prevIndex, rf.GetRealIndex(prevIndex)+1, rf.GetRealIndex(stop[0]))
+		entries = make([]LogEntry, len(rf.log[rf.GetRealIndex(prevIndex)+1:rf.GetRealIndex(stop[0])]))
+		copy(entries, rf.log[rf.GetRealIndex(prevIndex)+1:rf.GetRealIndex(stop[0])])
+		// rf.logger.Printf("sendone:prev:%d,realPrev:%d,stop:%d", prevIndex, rf.GetRealIndex(prevIndex)+1, stop[0])
+		// entries = make([]LogEntry, len(rf.log[rf.GetRealIndex(prevIndex)+1:stop[0]]))
+		// copy(entries, rf.log[rf.GetRealIndex(prevIndex)+1:rf.GetRealIndex(stop[0])])
 	}
 	a := id
 	req := &AppendEntriesReq{
@@ -822,7 +844,6 @@ func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *Appen
 		Entries:      entries,
 		LeaderCommit: rf.commitIndex,
 		Status:       status,
-		// SelfId:       a,
 	}
 	rf.mu.Unlock()
 	if id != rf.me {
@@ -831,7 +852,9 @@ func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *Appen
 		}
 		rf.logger.Printf("send heartbeat to %d,info:%+v", id, req)
 		go func(b int) {
+			// rf.mu.Lock()
 			rf.RPCSendAppendEntries(b, req, resp)
+			// rf.mu.Unlock()
 			if respChan != nil {
 				respChan <- resp
 			}
@@ -841,7 +864,7 @@ func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *Appen
 
 func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, stop ...int) bool {
 	rf.mu.Lock()
-	rf.logger.Printf("lastApplied:%d,commitIdx:%d", rf.lastAppliedIndex, rf.commitIndex)
+	rf.logger.Printf("lastApplied:%d,commitIdx:%d,stop:%+v", rf.lastAppliedIndex, rf.commitIndex, stop)
 	if rf.status != Leader || (status == Append && rf.lastAppliedIndex == rf.commitIndex) {
 		rf.logger.Printf("append false")
 		rf.mu.Unlock()
@@ -872,13 +895,16 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, stop ...int) bool 
 					rf.persist()
 					rf.mu.Unlock()
 				} else if resp.RequiredIndex != -1 {
-					rf.matchIndex[resp.Responder] = min(resp.RequiredIndex, len(rf.log)-1)
+					rf.matchIndex[resp.Responder] = min(resp.RequiredIndex, rf.lastAppliedIndex)
 					rf.nextIndex[resp.Responder] = rf.matchIndex[resp.Responder] + 1
-					if rf.matchIndex[resp.Responder] <= rf.lastSnapShotIndex {
+					if rf.matchIndex[resp.Responder] < rf.lastSnapShotIndex {
+						rf.mu.Unlock()
 						go rf.SendInstallSnapshot(resp.Responder)
+					} else {
+						rf.mu.Unlock()
+						stop = append(stop, rf.lastAppliedIndex+1)
+						rf.SendOne(Append, resp.Responder, respChan, stop...)
 					}
-					rf.mu.Unlock()
-					rf.SendOne(Append, resp.Responder, respChan, stop...)
 				} else {
 					rf.mu.Unlock()
 				}
@@ -893,7 +919,7 @@ func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, stop ...int) bool 
 		rf.mu.Lock()
 		for _, resp := range successResp {
 			id := resp.Responder
-			entryLen := len(rf.log[rf.GetRealIndex(rf.matchIndex[id])+1 : stop[0]])
+			entryLen := len(rf.log[rf.GetRealIndex(rf.matchIndex[id])+1 : rf.GetRealIndex(stop[0])])
 			rf.matchIndex[id] += entryLen
 			rf.nextIndex[id] += entryLen
 			// rf.logger.Printf("id:%d,match:%d,next:%d", id, rf.matchIndex[id], rf.nextIndex[id])
