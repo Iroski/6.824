@@ -368,11 +368,13 @@ func (rf *Raft) RequestVote(req *RequestVoteArgs, resp *RequestVoteReply) {
 		rf.logger.Printf("time:%d, votefor:%d", time.Now().UnixMilli()-rf.lastReceivedTime, rf.voteFor)
 
 		resp.Term = rf.currentTerm
-		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && (rf.log[realLastApplidIndex].Term < req.LastAppledTerm || (rf.log[realLastApplidIndex].Term == req.LastAppledTerm && rf.lastAppliedIndex <= req.LastAppliedIndex)) {
+		// if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId || time.Now().UnixMilli()-rf.lastVoteForTime > HeartBeatDuration) && (rf.log[realLastApplidIndex].Term < req.LastAppledTerm || (rf.log[realLastApplidIndex].Term == req.LastAppledTerm && rf.lastAppliedIndex <= req.LastAppliedIndex)) {
+		if time.Now().UnixMilli()-rf.lastReceivedTime > HeartBeatDuration && (rf.voteFor == NotVote || rf.voteFor == req.CandidateId) && (rf.log[realLastApplidIndex].Term < req.LastAppledTerm || (rf.log[realLastApplidIndex].Term == req.LastAppledTerm && rf.lastAppliedIndex <= req.LastAppliedIndex)) {
+
 			resp.VoteGranted = true
 			rf.voteFor = req.CandidateId
 			rf.lastVoteForTime = time.Now().UnixMilli()
-			rf.lastReceivedTime = time.Now().UnixMilli()
+			// rf.lastReceivedTime = time.Now().UnixMilli()
 		}
 		return
 	}
@@ -453,7 +455,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	}
 	rf.logger.Printf("begin to send command:%+v", entry)
 	rf.log = append(rf.log, entry)
-	rf.logger.Printf("logs:%+v", rf.log)
+	rf.logger.Printf("validLen:%d,logs:%+v", len(rf.log)-1, rf.log)
 	rf.mu.Unlock()
 
 	go func() {
@@ -507,7 +509,7 @@ func (rf *Raft) Ticker() {
 		time.Sleep(time.Duration(rand.Intn(150)+2*HeartBeatDuration) * time.Millisecond)
 		rf.mu.Lock()
 		if periodicalTime > rf.lastReceivedTime && rf.status == Follower { //醒了之后发现还没有收到心跳
-			rf.voteFor = NotVote
+			rf.voteFor = rf.me
 			rf.mu.Unlock()
 			if rf.PreVote(periodicalTime) {
 				rf.Election(periodicalTime)
@@ -607,6 +609,7 @@ func (rf *Raft) PreVote(periodicalTime int64) bool {
 	} else {
 		rf.logger.Println("prevote false")
 		rf.status = Follower
+		rf.voteFor = NotVote
 		return false
 	}
 }
