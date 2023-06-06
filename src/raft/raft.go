@@ -130,14 +130,11 @@ func (rf *Raft) persist() {
 }
 
 func (rf *Raft) getPersistData() []byte {
-	// rf.mu.Lock()
-	// defer rf.mu.Unlock()
 	w := new(bytes.Buffer)
 	e := labgob.NewEncoder(w)
 	e.Encode(rf.currentTerm)
 	e.Encode(rf.voteFor)
 	e.Encode(rf.log)
-	e.Encode(rf.commitIndex)
 	e.Encode(rf.lastAppliedIndex)
 	e.Encode(rf.lastSnapShotIndex)
 	e.Encode(rf.lastSnapShotTerm)
@@ -159,7 +156,6 @@ func (rf *Raft) readPersist(data []byte) {
 	var (
 		currentTerm       int
 		voteFor           int
-		commitIdx         int
 		lastAppliedIndex  int
 		lastSnapShotIndex int
 		lastSnapShotTerm  int
@@ -168,7 +164,6 @@ func (rf *Raft) readPersist(data []byte) {
 	if d.Decode(&currentTerm) != nil ||
 		d.Decode(&voteFor) != nil ||
 		d.Decode(&log) != nil ||
-		d.Decode(&commitIdx) != nil ||
 		d.Decode(&lastAppliedIndex) != nil ||
 		d.Decode(&lastSnapShotIndex) != nil ||
 		d.Decode(&lastSnapShotTerm) != nil {
@@ -182,14 +177,7 @@ func (rf *Raft) readPersist(data []byte) {
 		rf.lastSnapShotTerm = lastSnapShotTerm
 		rf.lastAppliedIndex = lastAppliedIndex
 		rf.lastAppliedTerm = rf.log[rf.GetRealIndex(rf.lastAppliedIndex)].Term
-		rf.logger.Printf("cterm:%d,cmtIdx:%d,lsnapIdx:%d,lAppIdx:%d", currentTerm, commitIdx, lastSnapShotIndex, lastAppliedIndex)
-		// if lastSnapShotTerm != 0 {
-		// 	rf.applyChan <- ApplyMsg{
-		// 		CommandValid: true,
-		// 		Command:      nil,
-		// 		CommandIndex: lastSnapShotIndex,
-		// 	}
-		// }
+		rf.logger.Printf("cterm:%d,lsnapIdx:%d,lAppIdx:%d", currentTerm, lastSnapShotIndex, lastAppliedIndex)
 	}
 }
 
@@ -834,9 +822,6 @@ func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *Appen
 		rf.logger.Printf("sendone:prev:%d,realPrev:%d,stop:%d", prevIndex, rf.GetRealIndex(prevIndex)+1, rf.GetRealIndex(stop[0]))
 		entries = make([]LogEntry, len(rf.log[rf.GetRealIndex(prevIndex)+1:rf.GetRealIndex(stop[0])]))
 		copy(entries, rf.log[rf.GetRealIndex(prevIndex)+1:rf.GetRealIndex(stop[0])])
-		// rf.logger.Printf("sendone:prev:%d,realPrev:%d,stop:%d", prevIndex, rf.GetRealIndex(prevIndex)+1, stop[0])
-		// entries = make([]LogEntry, len(rf.log[rf.GetRealIndex(prevIndex)+1:stop[0]]))
-		// copy(entries, rf.log[rf.GetRealIndex(prevIndex)+1:rf.GetRealIndex(stop[0])])
 	}
 	a := id
 	req := &AppendEntriesReq{
@@ -868,7 +853,7 @@ func (rf *Raft) SendOne(status AppendEntriesStatus, id int, respChan chan *Appen
 func (rf *Raft) SendAppendEntries(status AppendEntriesStatus, stop ...int) bool {
 	rf.mu.Lock()
 	rf.logger.Printf("lastApplied:%d,commitIdx:%d,stop:%+v", rf.lastAppliedIndex, rf.commitIndex, stop)
-	if rf.status != Leader || (status == Append && rf.lastAppliedIndex == rf.commitIndex) {
+	if rf.status != Leader || (status == Append && rf.lastAppliedIndex == rf.commitIndex) { //避免concurrent start时多次append
 		rf.logger.Printf("append false")
 		rf.mu.Unlock()
 		return false
